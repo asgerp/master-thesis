@@ -20,13 +20,9 @@
 
 using namespace cv;
 
-int main(int argc, char** argv )
+int mdmain()
 {
-    
-    if(argc != 2){
-        return -1;
-    }
-    Mat object = imread( argv[1], CV_LOAD_IMAGE_GRAYSCALE );
+    Mat object = imread( "photo2.jpg", CV_LOAD_IMAGE_GRAYSCALE );
     
     if( !object.data )
     {
@@ -37,24 +33,18 @@ int main(int argc, char** argv )
     //Detect the keypoints using SURF Detector
     int minHessian = 500;
     
-    
-    OrbFeatureDetector detector(1500,1.2,8,31,0,2,ORB::HARRIS_SCORE, 31);
-//    SurfFeatureDetector detector( minHessian );
+    SurfFeatureDetector detector( minHessian );
     std::vector<KeyPoint> kp_object;
     
     detector.detect( object, kp_object );
     
     //Calculate descriptors (feature vectors)
-    OrbDescriptorExtractor extractor;
-//    SurfDescriptorExtractor extractor;
+    SurfDescriptorExtractor extractor;
     Mat des_object;
     
     extractor.compute( object, kp_object, des_object );
     
-    if(des_object.type()!=CV_32F) {
-        des_object.convertTo(des_object, CV_32F);
-    }
-    BFMatcher matcher;
+    FlannBasedMatcher matcher;
     
     VideoCapture cap(0);
     
@@ -92,25 +82,21 @@ int main(int argc, char** argv )
         Mat image;
         
         cvtColor(frame, image, CV_RGB2GRAY);
-
+        
         detector.detect( image, kp_image );
         extractor.compute( image, kp_image, des_image );
-        if(des_image.type()!=CV_32F) {
-            des_image.convertTo(des_image, CV_32F);
-        }
-
+        
         matcher.knnMatch(des_object, des_image, matches, 2);
         
         for(int i = 0; i < min(des_image.rows-1,(int) matches.size()); i++) //THIS LOOP IS SENSITIVE TO SEGFAULTS
         {
-            if((matches[i][0].distance < 0.8*(matches[i][1].distance)) && ((int) matches[i].size()<=2 && (int) matches[i].size()>0))
+            if((matches[i][0].distance < 0.6*(matches[i][1].distance)) && ((int) matches[i].size()<=2 && (int) matches[i].size()>0))
             {
                 good_matches.push_back(matches[i][0]);
             }
         }
         
         //Draw only "good" matches
-        std::cout << "good matches: " << good_matches.size() << std::endl;
         drawMatches( object, kp_object, image, kp_image, good_matches, img_matches, Scalar::all(-1), Scalar::all(-1), vector<char>(), DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );
         
         if (good_matches.size() >= 4)

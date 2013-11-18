@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		4960AE351834ECF100D8AFE8 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4960AE341834ECF100D8AFE8 /* main.cpp */; };
 		4960AE371834ECF100D8AFE8 /* open_cv_test.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4960AE361834ECF100D8AFE8 /* open_cv_test.1 */; };
+		49B36E65183A7B1100AF80AE /* Other_test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49B36E63183A7B1100AF80AE /* Other_test.cpp */; };
 		49C4CD25183680F800337AF0 /* libboost_atomic-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 49C4CCAF183680F700337AF0 /* libboost_atomic-mt.a */; };
 		49C4CD26183680F800337AF0 /* libboost_atomic-mt.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 49C4CCB0183680F700337AF0 /* libboost_atomic-mt.dylib */; };
 		49C4CD27183680F800337AF0 /* libboost_chrono-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 49C4CCB1183680F700337AF0 /* libboost_chrono-mt.a */; };
@@ -201,6 +202,9 @@
 		4960AE311834ECF100D8AFE8 /* open_cv_test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = open_cv_test; sourceTree = BUILT_PRODUCTS_DIR; };
 		4960AE341834ECF100D8AFE8 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		4960AE361834ECF100D8AFE8 /* open_cv_test.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = open_cv_test.1; sourceTree = "<group>"; };
+		49B36E63183A7B1100AF80AE /* Other_test.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Other_test.cpp; sourceTree = "<group>"; };
+		49B36E64183A7B1100AF80AE /* Other_test.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Other_test.h; sourceTree = "<group>"; };
+		49B36E66183A981000AF80AE /* matcher.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = matcher.h; sourceTree = "<group>"; };
 		49C4CCAF183680F700337AF0 /* libboost_atomic-mt.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libboost_atomic-mt.a"; path = "/usr/local/Cellar/boost/1.55.0/lib/libboost_atomic-mt.a"; sourceTree = "<absolute>"; };
 		49C4CCB0183680F700337AF0 /* libboost_atomic-mt.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libboost_atomic-mt.dylib"; path = "/usr/local/Cellar/boost/1.55.0/lib/libboost_atomic-mt.dylib"; sourceTree = "<absolute>"; };
 		49C4CCB1183680F700337AF0 /* libboost_chrono-mt.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libboost_chrono-mt.a"; path = "/usr/local/Cellar/boost/1.55.0/lib/libboost_chrono-mt.a"; sourceTree = "<absolute>"; };
@@ -582,6 +586,9 @@
 				49C4CD9B1836810700337AF0 /* Boost Libraries */,
 				4960AE3D1834EE4B00D8AFE8 /* OpenCV Libraries */,
 				4960AE341834ECF100D8AFE8 /* main.cpp */,
+				49B36E66183A981000AF80AE /* matcher.h */,
+				49B36E63183A7B1100AF80AE /* Other_test.cpp */,
+				49B36E64183A7B1100AF80AE /* Other_test.h */,
 				4960AE361834ECF100D8AFE8 /* open_cv_test.1 */,
 			);
 			path = open_cv_test;
@@ -825,6 +832,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				49B36E65183A7B1100AF80AE /* Other_test.cpp in Sources */,
 				4960AE351834ECF100D8AFE8 /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
