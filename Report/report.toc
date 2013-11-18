@@ -1,6 +1,0 @@
-\contentsline {chapter}{\numberline {1}Introdution}{2}{chapter.1}
-\contentsline {chapter}{\numberline {2}Related Work}{3}{chapter.2}
-\contentsline {subsection}{\numberline {2.0.1}Projection and multi-touch input on digital surfaces}{3}{subsection.2.0.1}
-\contentsline {subsection}{\numberline {2.0.2}Use desktop as input canvas}{4}{subsection.2.0.2}
-\contentsline {subsubsection}{Unadorned Desk}{4}{section*.2}
-\contentsline {subsection}{\numberline {2.0.3}Using pen and paper}{4}{subsection.2.0.3}
