@@ -22,10 +22,11 @@ int detect(Mat obj, Mat scene);
 const double NND_RATIO = 0.7;
 const double PATTERN_SCALE = 22.0;
 
+
 /** @function main */
 int main( int argc, char** argv )
 {
-    if( argc != 3 )
+    /*if( argc != 3 )
     { readme(); return -1; }
     
     Mat img_scene = imread( argv[1], CV_LOAD_IMAGE_GRAYSCALE );
@@ -39,7 +40,40 @@ int main( int argc, char** argv )
     for( int i = 0; i < img_objs.size(); i++ ) {
         detect(img_objs.at(i), img_scene);
     }
+    */
+    time_t start, end;
+    int counter=0;
+
+
+    VideoCapture cap(0);
+    cap.set(CV_CAP_PROP_FRAME_WIDTH, 640);
+    cap.set(CV_CAP_PROP_FRAME_HEIGHT, 480);
+    cap.set(CV_CAP_PROP_CONVERT_RGB , false);
+    cap.set(CV_CAP_PROP_FPS , 60);
     
+    if (!cap.isOpened())
+    { cout << "could not capture";
+        return 0; }
+    
+    Mat frame;
+    namedWindow("camera", 1);
+    char key = 'a';
+    time(&start);
+    while(key != 27)
+    {   cap.read( frame);
+        //imshow("camera", frame);
+        
+        //##################
+        //time at the end of 1 show, Stop the clock and show FPS
+        time(&end);
+        ++counter;
+        cout <<"fps: "<< counter/ difftime(end,start) <<endl <<endl;
+        //##################
+        
+        key = waitKey(3); }
+    
+    destroyAllWindows();
+    return 0;
 }
 
 int detect(Mat img_object, Mat img_scene) {
