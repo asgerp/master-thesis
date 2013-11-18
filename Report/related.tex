@@ -1,0 +1,79 @@
+%!TEX root = report.tex
+\chapter{Related Work} % (fold)
+\label{cha:related_work}
+\nocite{*}
+Introduction to related work. What is relevant to discuss. what do we talk about when we're talking about paper and desktop interfaces
+
+Research in moving controls onto the physical desktop has mainly focused on three approaches; extending the screen onto the desktop using projection, pen tracking on paper and multi-touch desktops.
+
+
+
+FORM:
+what is it. \\
+results \\
+how is it related to us\\
+\subsection{Projection and multi-touch input on digital surfaces} % (fold)
+\label{sub:projection_and_multi_touch_input_on_digital_surfaces}
+% more here!!
+
+BonFire \cite{kane2009bonfire} is a self contained mobile computing system that consists of two laptop-mounted micro-projectors and accompanying cameras. They are used to project an interactive display in either side of a laptop, while using the cameras to do hand gesture tracking, object recognition, and information transfer from the projected space. The system recognises objects placed in its line of sight, and enables integration between physical and digital objects. BonFire also provides a surface in tandem with the computer screen that allows for direct pointing and hand gestures, and finally it extends the input and output space to enrich existing applications.
+
+
+Magic Desk \cite{bi2011magic} attempts to integrate multi-touch input on a digital surface with a mouse and keyboard to facilitate desktop work. In particular they demonstrate how different regions within the desktop environment can be used for touch. They also shed light on what types of input is best suited for each region. They in particular invetigate how using the regions around the keyboard compare the standard vertical touch  input interfce. They focus on enhancing window management and taskbar functionality.
+
+% subsection projection_and_multi_touch_input_on_digital_surfaces (end)
+\subsection{Use desktop as input canvas} % (fold)
+\label{sub:use_desktop_as_input_canvas}
+
+Unadorned Desk \cite{hausen2012unadorned} uses a depth camera to treat the empty space on the desktop next to the computer as an input canvas for easy access to documents, applications etc.. Users can quickly store, organize and select items from this space with optional feedback on the screen.
+
+
+\subsubsection{Unadorned Desk} % (fold)
+\label{ssub:un}
+
+% subsubsection un (end)
+% subsection use_desktop_as_input_canvas (end)
+
+
+\subsection{Using pen and paper} % (fold)
+\label{sub:using_pen_and_paper}
+% VoodooSketch
+
+The VoodooSketch system is designed to extend large interactive surfaces with physical interface palettes that combine sketched controls on paper with tangible controls. The authors identified four challenges to existing large interactive surfaces as motivation; (1) Interface localization-- where moving between activities and graphical elements is time-consuming, (2) Collaboration-- where the interface needs to support multiple simulataneous users that might share a set of interface components, (3) Different perspectives-- where different perspectives mean interface elements must adapt to different views, (4) Adaptability-- where different users may have different requirements, leading to a need for customizable controls depending on the user and task. Therefore the VoodooSketch system is designed to separate the interface and work surface and provides tools that can be custom-assembled depending on the current set of tasks. Application functionality can be bound to elements on the physical palette and controlled without needing to interact with the underlying graphical interface of the application. The physical palette itself leverages the Anoto\cite{anoto2011anoto} system for its sketched controls where hand-writing recognition is used to link sketched controls with application functionality. Additionally, the physical palette utilises the VoodooIO\cite{villar2007voodooio} system for its tangible controls such as joystick, slider and button elements.
+
+VoodooSketch \cite{Block:2008:VEI:1347390.1347404} allows users to combine pen-and-paper sketched, interactive menus with tangible controls on a breadboard for controlling application functionality using the Anoto \cite{anoto2011anoto} digital pen and VoodooIO \cite{villar2007voodooio}, a real time adaptable gaming controller respectively. They target digital surface tabletops and collaboration more than single user desktop experience.\par
+
+% PLink
+
+more in depth explanation of what plink is
+PLink \cite{steimle2011plink} utilises an Anoto pen to give users the ability to sketch shortcuts, that can later be interacted with,  on a paper surface. PLink’s shortcuts are limited to references into digital documents, starting applications, and opening files. \\
+An initial study revealed that PLink's paper links are effective in supporting users organising digital resources during web searches.
+% integrations between phys and dig desktop
+A longer study, 4 weeks, showed that user made paper links for directly and rapidly accessing resources, and personal "portals" that linked to files, folders and programs. Portals were created on the users dominant hand side and normally not occluded. \\
+%spacial
+The users ordered the link topically instead of in linear sequences. And when the users were performing information gathering tasks, they externalized less information when they used PLink as the content of the resource could be retrived quickly. \\
+%temporal
+Generally the usage of the links decrease temporally, usually within hours, yet Steimle et al. saw some user show the opposite trend, where their usage rised even after 7 days. \par
+% Study showed that
+% PaperPoint
+
+PaperPoint \cite{Signer:2007:PPP:1226969.1226981} utilises an Anoto\cite{anoto2011anoto} pen and interactive paper to control and annotate PowerPoint  presentations. The slides are printed on interactive paper and the presenter can then chose which slides are shown. The presenter can also annotate the slides during the presentation, by using the Anoto pen on the printed slides, making the annotations appear digitally. \\
+SHOULD WE TALK ABOUT THE RESULTS??
+Users reported that they liked the flexibility provided by PaperPoint and that using the system has changed the way they prepared presentations; they started to include slides in their presentations that they were not completely sure would be used. This only seemed to be an advantage when the presenter were familiar with the slides or the presenter was experienced, for others the usage of PaperPoint resulted in presenters eing under-prepared in structure and content of the presentation. The PaperPoint system were also reported to work well when more than one presenter used the system.\\
+
+RELATE TO OUR IDEA \\
+.
+\par
+
+
+
+% subsection using_pen_and_paper (end)
+
+
+
+sum up what has been stated in this chapters and relate to our work
+
+
+Overall it is clear that many attempts have been made to move functionality away from the main screen and onto an adjacent medium. We know we can utilise the empty space on the desktop from the work done on BonFire \cite{kane2009bonfire}, MagicDesk \cite{bi2011magic} and the Unadorned Desk \cite{hausen2012unadorned} especially. PLink \cite{steimle2011plink} allows the user to have more than one piece of digital paper, even special dotted post-its. We will also use more than one piece of paper to give users the possibility of putting together several papers at will to create personalised controls. The focus of VoodooSketch \cite{Block:2008:VEI:1347390.1347404} is on enabling round-the-table collaborative adaptable controls, but for a single application. Like VoodooSketch , we will also focus on controller adaptability and creation, however we will focus on a single user, in a computer-desktop configuration. We will focus on creating and using controls for multiple applications when they are needed, whereas VoodooSketch and PaperPoint \cite{Signer:2007:PPP:1226969.1226981} focuses on creating or using controls configured for one application. In short we will combine utilisation of empty space around the desktop investigated by MagicDesk, BonFire, Unadorned Desk, and using multiple papers for controls as investigated in PLink. Furthermore, we will provide a better understanding of ad hoc creation of controls on paper for single users.
+% chapter related_work (end)
+
