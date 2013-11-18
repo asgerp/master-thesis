@@ -41,3 +41,4 @@ Report/*.mtc
 Report/*.mtc1
 Report/*.out
 Report/*.synctex.gz
+Report/*.fdb_latexmk
