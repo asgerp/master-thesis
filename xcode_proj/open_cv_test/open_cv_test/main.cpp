@@ -5,6 +5,7 @@
 
 #include "opencv2/core/core.hpp"
 #include "opencv2/features2d/features2d.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/calib3d/calib3d.hpp"
 #include "opencv2/nonfree/nonfree.hpp"
@@ -41,13 +42,16 @@ int main( int argc, char** argv )
         detect(img_objs.at(i), img_scene);
     }
     */
+    vector< Mat > img_objs = getMatFromDir( argv[1]);
     time_t start, end;
     int counter=0;
 
 
     VideoCapture cap(0);
+    //320x240
     cap.set(CV_CAP_PROP_FRAME_WIDTH, 640);
     cap.set(CV_CAP_PROP_FRAME_HEIGHT, 480);
+    
     cap.set(CV_CAP_PROP_CONVERT_RGB , false);
     cap.set(CV_CAP_PROP_FPS , 60);
     
@@ -59,15 +63,18 @@ int main( int argc, char** argv )
     namedWindow("camera", 1);
     char key = 'a';
     time(&start);
+    cout << "Starting" << endl;
     while(key != 27)
     {   cap.read( frame);
-        //imshow("camera", frame);
+        detect(img_objs.at(0), frame);
+//        imshow("camera", frame);
         
         //##################
         //time at the end of 1 show, Stop the clock and show FPS
         time(&end);
         ++counter;
         cout <<"fps: "<< counter/ difftime(end,start) <<endl <<endl;
+        cout << "FPS: " << cap.get(CV_CAP_PROP_FPS) << endl;
         //##################
         
         key = waitKey(3); }
@@ -79,14 +86,16 @@ int main( int argc, char** argv )
 int detect(Mat img_object, Mat img_scene) {
     clock_t t1,t2;
     t1=clock();
+    Mat gray;
     
+    cvtColor(img_scene, gray, CV_BGR2GRAY);
     //-- Step 1: Detect the keypoints using FAST Detector
     FastFeatureDetector detector;
 
     vector<KeyPoint> keypoints_object, keypoints_scene;
     
     detector.detect( img_object, keypoints_object );
-    detector.detect( img_scene, keypoints_scene );
+    detector.detect( gray, keypoints_scene );
     
     //-- Step 2: Calculate descriptors (feature vectors)
     FREAK extractor(true, true, PATTERN_SCALE, 4, vector<int>());
@@ -168,11 +177,11 @@ int detect(Mat img_object, Mat img_scene) {
         line( img_matches, scene_corners[3] + Point2f( img_object.cols, 0), scene_corners[0] + Point2f( img_object.cols, 0), Scalar( 0, 255, 0), 4 );
     
         //-- Show detected matches
-        imshow( "Good Matches & Object detection", img_matches );
     
-        imwrite("result.jpg", img_matches);
-        waitKey(0);
+        //imwrite("result.jpg", img_matches);
+        //waitKey(0);
     }
+    imshow( "camera", img_matches );
     return 0;
     
 }
