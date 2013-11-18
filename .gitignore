@@ -40,5 +40,6 @@ Report/*.maf
 Report/*.mtc
 Report/*.mtc1
 Report/*.out
+Report/*.pdf
 Report/*.synctex.gz
 Report/*.fdb_latexmk
