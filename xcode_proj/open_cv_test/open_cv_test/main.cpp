@@ -2,7 +2,7 @@
 //  Other_test.cpp
 //  open_cv_test
 //
-//  Created by Asger Pedersen on 18/11/13.
+//  Created by Asger Pedersen on 10/11/13.
 //  Copyright (c) 2013 Asger Pedersen. All rights reserved.
 //
 
@@ -45,7 +45,9 @@ int main(int argc, char** argv )
     detector.detect( object, kp_object );
     
     //Calculate descriptors (feature vectors)
-    OrbDescriptorExtractor extractor;
+    
+    FREAK extractor;
+//    OrbDescriptorExtractor extractor;
 //    SurfDescriptorExtractor extractor;
     Mat des_object;
     
