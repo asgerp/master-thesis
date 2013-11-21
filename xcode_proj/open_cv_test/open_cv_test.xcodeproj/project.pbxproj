@@ -11,6 +11,7 @@
 		4960AE351834ECF100D8AFE8 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4960AE341834ECF100D8AFE8 /* main.cpp */; };
 		4960AE371834ECF100D8AFE8 /* open_cv_test.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4960AE361834ECF100D8AFE8 /* open_cv_test.1 */; };
 		49B36E65183A7B1100AF80AE /* Other_test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49B36E63183A7B1100AF80AE /* Other_test.cpp */; };
+		49B36E69183BC23B00AF80AE /* old_code.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49B36E67183BC23B00AF80AE /* old_code.cpp */; };
 		49C4CD25183680F800337AF0 /* libboost_atomic-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 49C4CCAF183680F700337AF0 /* libboost_atomic-mt.a */; };
 		49C4CD26183680F800337AF0 /* libboost_atomic-mt.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 49C4CCB0183680F700337AF0 /* libboost_atomic-mt.dylib */; };
 		49C4CD27183680F800337AF0 /* libboost_chrono-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 49C4CCB1183680F700337AF0 /* libboost_chrono-mt.a */; };
@@ -129,6 +130,7 @@
 		49C4CD98183680F800337AF0 /* libboost_wserialization-mt.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 49C4CD22183680F800337AF0 /* libboost_wserialization-mt.dylib */; };
 		49C4CD99183680F800337AF0 /* libboost_wserialization.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 49C4CD23183680F800337AF0 /* libboost_wserialization.a */; };
 		49C4CD9A183680F800337AF0 /* libboost_wserialization.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 49C4CD24183680F800337AF0 /* libboost_wserialization.dylib */; };
+		49D34610183EAB2100BF85FD /* DetectPaper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49D3460E183EAB2100BF85FD /* DetectPaper.cpp */; };
 		49DD09B71834F1F400812479 /* libopencv_calib3d.2.4.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 49DD09801834F1F400812479 /* libopencv_calib3d.2.4.7.dylib */; };
 		49DD09B81834F1F400812479 /* libopencv_calib3d.2.4.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 49DD09811834F1F400812479 /* libopencv_calib3d.2.4.7.dylib */; };
 		49DD09B91834F1F400812479 /* libopencv_calib3d.2.4.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 49DD09821834F1F400812479 /* libopencv_calib3d.2.4.7.dylib */; };
@@ -208,6 +210,8 @@
 		49B36E63183A7B1100AF80AE /* Other_test.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Other_test.cpp; sourceTree = "<group>"; };
 		49B36E64183A7B1100AF80AE /* Other_test.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Other_test.h; sourceTree = "<group>"; };
 		49B36E66183A981000AF80AE /* matcher.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = matcher.h; sourceTree = "<group>"; };
+		49B36E67183BC23B00AF80AE /* old_code.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = old_code.cpp; sourceTree = "<group>"; };
+		49B36E68183BC23B00AF80AE /* old_code.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = old_code.h; sourceTree = "<group>"; };
 		49C4CCAF183680F700337AF0 /* libboost_atomic-mt.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libboost_atomic-mt.a"; path = "/usr/local/Cellar/boost/1.55.0/lib/libboost_atomic-mt.a"; sourceTree = "<absolute>"; };
 		49C4CCB0183680F700337AF0 /* libboost_atomic-mt.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libboost_atomic-mt.dylib"; path = "/usr/local/Cellar/boost/1.55.0/lib/libboost_atomic-mt.dylib"; sourceTree = "<absolute>"; };
 		49C4CCB1183680F700337AF0 /* libboost_chrono-mt.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libboost_chrono-mt.a"; path = "/usr/local/Cellar/boost/1.55.0/lib/libboost_chrono-mt.a"; sourceTree = "<absolute>"; };
@@ -326,6 +330,8 @@
 		49C4CD22183680F800337AF0 /* libboost_wserialization-mt.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libboost_wserialization-mt.dylib"; path = "/usr/local/Cellar/boost/1.55.0/lib/libboost_wserialization-mt.dylib"; sourceTree = "<absolute>"; };
 		49C4CD23183680F800337AF0 /* libboost_wserialization.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libboost_wserialization.a; path = /usr/local/Cellar/boost/1.55.0/lib/libboost_wserialization.a; sourceTree = "<absolute>"; };
 		49C4CD24183680F800337AF0 /* libboost_wserialization.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_wserialization.dylib; path = /usr/local/Cellar/boost/1.55.0/lib/libboost_wserialization.dylib; sourceTree = "<absolute>"; };
+		49D3460E183EAB2100BF85FD /* DetectPaper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DetectPaper.cpp; sourceTree = "<group>"; };
+		49D3460F183EAB2100BF85FD /* DetectPaper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DetectPaper.h; sourceTree = "<group>"; };
 		49DD09801834F1F400812479 /* libopencv_calib3d.2.4.7.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libopencv_calib3d.2.4.7.dylib; path = /usr/local/Cellar/opencv/2.4.7/lib/libopencv_calib3d.2.4.7.dylib; sourceTree = "<absolute>"; };
 		49DD09811834F1F400812479 /* libopencv_calib3d.2.4.7.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libopencv_calib3d.2.4.7.dylib; path = /usr/local/Cellar/opencv/2.4.7/lib/libopencv_calib3d.2.4.7.dylib; sourceTree = "<absolute>"; };
 		49DD09821834F1F400812479 /* libopencv_calib3d.2.4.7.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libopencv_calib3d.2.4.7.dylib; path = /usr/local/Cellar/opencv/2.4.7/lib/libopencv_calib3d.2.4.7.dylib; sourceTree = "<absolute>"; };
@@ -591,6 +597,10 @@
 				49C4CD9B1836810700337AF0 /* Boost Libraries */,
 				4960AE3D1834EE4B00D8AFE8 /* OpenCV Libraries */,
 				4960AE341834ECF100D8AFE8 /* main.cpp */,
+				49D3460E183EAB2100BF85FD /* DetectPaper.cpp */,
+				49D3460F183EAB2100BF85FD /* DetectPaper.h */,
+				49B36E67183BC23B00AF80AE /* old_code.cpp */,
+				49B36E68183BC23B00AF80AE /* old_code.h */,
 				49B36E66183A981000AF80AE /* matcher.h */,
 				49B36E63183A7B1100AF80AE /* Other_test.cpp */,
 				49B36E64183A7B1100AF80AE /* Other_test.h */,
@@ -838,6 +848,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				20BD2146183EA75B006F3F4D /* DetectPaper.cpp in Sources */,
+				49B36E69183BC23B00AF80AE /* old_code.cpp in Sources */,
+				49D34610183EAB2100BF85FD /* DetectPaper.cpp in Sources */,
 				49B36E65183A7B1100AF80AE /* Other_test.cpp in Sources */,
 				4960AE351834ECF100D8AFE8 /* main.cpp in Sources */,
 			);
