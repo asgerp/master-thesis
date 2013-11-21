@@ -8,6 +8,7 @@
 
 #include "Other_test.h"
 #include <stdio.h>
+#include <time.h>
 #include <iostream>
 #include "opencv2/core/core.hpp"
 #include "opencv2/features2d/features2d.hpp"
@@ -73,7 +74,9 @@ int main(int argc, char** argv )
     obj_corners[1] = cvPoint( object.cols, 0 );
     obj_corners[2] = cvPoint( object.cols, object.rows );
     obj_corners[3] = cvPoint( 0, object.rows );
-    
+    time_t start, end;
+    time(&start);
+    int counter=0;
     char key = 'a';
     int framecount = 0;
     while (key != 27)
@@ -86,6 +89,8 @@ int main(int argc, char** argv )
         if (framecount < 5)
         {
             framecount++;
+            ++counter;
+            time(&end);
             continue;
         }
         
@@ -143,7 +148,10 @@ int main(int argc, char** argv )
         
         //Show detected matches
         imshow( "Good Matches", img_matches );
-        
+        time(&end);
+        ++counter;
+        std::cout <<"fps: "<< counter/ difftime(end,start) <<std::endl <<std::endl;
+
         key = waitKey(1);
     }
     return 0;
