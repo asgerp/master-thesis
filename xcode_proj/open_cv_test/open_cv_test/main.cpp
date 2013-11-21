@@ -39,18 +39,20 @@ int main(int argc, char** argv )
     //Detect the keypoints using SURF Detector
     int minHessian = 500;
     
-    
-    //OrbFeatureDetector detector(1500,1.2,8,31,0,2,ORB::HARRIS_SCORE, 31);
-    SurfFeatureDetector detector( minHessian );
+    FastFeatureDetector detector(15);
+//    OrbFeatureDetector detector(1500,1.2,8,31,0,2,ORB::HARRIS_SCORE, 31);
+    //SurfFeatureDetector detector( minHessian );
     std::vector<KeyPoint> kp_object;
     
     detector.detect( object, kp_object );
     
     //Calculate descriptors (feature vectors)
     
-//    FREAK extractor;
+
+    //-- Step 2: Calculate descriptors (feature vectors)
+    FREAK extractor(true, true, 22.0, 4, vector<int>());
 //    OrbDescriptorExtractor extractor;
-    SurfDescriptorExtractor extractor;
+//    SurfDescriptorExtractor extractor;
     Mat des_object;
     
     extractor.compute( object, kp_object, des_object );
@@ -64,7 +66,7 @@ int main(int argc, char** argv )
     VideoCapture cap(0);
     cap.set(CV_CAP_PROP_FRAME_WIDTH, 320);
     cap.set(CV_CAP_PROP_FRAME_HEIGHT, 240);
-
+    cap.set(CV_CAP_PROP_CONVERT_RGB , false);
     
     namedWindow("Good Matches");
     
@@ -77,6 +79,8 @@ int main(int argc, char** argv )
     obj_corners[3] = cvPoint( 0, object.rows );
     time_t start, end;
     time(&start);
+    clock_t t1,t2;
+
     int counter=0;
     char key = 'a';
     int framecount = 0;
@@ -94,7 +98,7 @@ int main(int argc, char** argv )
             time(&end);
             continue;
         }
-        
+        t1=clock();
         Mat des_image, img_matches;
         std::vector<KeyPoint> kp_image;
         std::vector<vector<DMatch > > matches;
@@ -165,6 +169,10 @@ int main(int argc, char** argv )
         time(&end);
         ++counter;
         std::cout <<"fps: "<< counter/ difftime(end,start) <<std::endl <<std::endl;
+        t2=clock();
+        float diff ((float)t2-(float)t1);
+        float seconds = diff / CLOCKS_PER_SEC;
+        std::cout << "SURF/SURF -> RANSAC took " << seconds << " SECONDS" << std::endl;
 
         key = waitKey(1);
     }
