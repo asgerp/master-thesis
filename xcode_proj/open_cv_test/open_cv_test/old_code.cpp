@@ -25,7 +25,7 @@ const double PATTERN_SCALE = 22.0;
 
 
 /** @function main */
-int main( int argc, char** argv )
+int kmain( int argc, char** argv )
 {
     /*if( argc != 3 )
      { readme(); return -1; }

@@ -38,27 +38,31 @@ int main(int argc, char** argv )
     int minHessian = 500;
     
     
-    OrbFeatureDetector detector(1500,1.2,8,31,0,2,ORB::HARRIS_SCORE, 31);
-//    SurfFeatureDetector detector( minHessian );
+    //OrbFeatureDetector detector(1500,1.2,8,31,0,2,ORB::HARRIS_SCORE, 31);
+    SurfFeatureDetector detector( minHessian );
     std::vector<KeyPoint> kp_object;
     
     detector.detect( object, kp_object );
     
     //Calculate descriptors (feature vectors)
     
-    FREAK extractor;
+//    FREAK extractor;
 //    OrbDescriptorExtractor extractor;
-//    SurfDescriptorExtractor extractor;
+    SurfDescriptorExtractor extractor;
     Mat des_object;
     
     extractor.compute( object, kp_object, des_object );
     
-    if(des_object.type()!=CV_32F) {
+    /*if(des_object.type()!=CV_32F) {
         des_object.convertTo(des_object, CV_32F);
-    }
+    }*/
+    std::cout << des_object.size() << std::endl;
     BFMatcher matcher;
     
     VideoCapture cap(0);
+    cap.set(CV_CAP_PROP_FRAME_WIDTH, 320);
+    cap.set(CV_CAP_PROP_FRAME_HEIGHT, 240);
+
     
     namedWindow("Good Matches");
     
@@ -97,12 +101,13 @@ int main(int argc, char** argv )
 
         detector.detect( image, kp_image );
         extractor.compute( image, kp_image, des_image );
+        /*
         if(des_image.type()!=CV_32F) {
             des_image.convertTo(des_image, CV_32F);
         }
-
+*/
         matcher.knnMatch(des_object, des_image, matches, 2);
-        
+        std::cout << " matches: " << matches.size() << std::endl;
         for(int i = 0; i < min(des_image.rows-1,(int) matches.size()); i++) //THIS LOOP IS SENSITIVE TO SEGFAULTS
         {
             if((matches[i][0].distance < 0.8*(matches[i][1].distance)) && ((int) matches[i].size()<=2 && (int) matches[i].size()>0))
