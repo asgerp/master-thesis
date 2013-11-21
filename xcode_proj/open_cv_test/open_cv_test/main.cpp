@@ -78,8 +78,10 @@ int main(int argc, char** argv )
     int framecount = 0;
     while (key != 27)
     {
-        Mat frame;
+        Mat frame, eq_frame, image;
         cap >> frame;
+        cvtColor(frame, eq_frame , CV_RGB2GRAY);
+        equalizeHist(eq_frame, image);
         
         if (framecount < 5)
         {
@@ -95,9 +97,8 @@ int main(int argc, char** argv )
         std::vector<Point2f> scene;
         std::vector<Point2f> scene_corners(4);
         Mat H;
-        Mat image;
         
-        cvtColor(frame, image, CV_RGB2GRAY);
+        
 
         detector.detect( image, kp_image );
         extractor.compute( image, kp_image, des_image );
