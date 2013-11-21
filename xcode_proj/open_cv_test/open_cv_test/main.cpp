@@ -18,6 +18,7 @@
 #include "opencv2/nonfree/nonfree.hpp"
 #include "opencv2/nonfree/features2d.hpp"
 
+#include "DetectPaper.h"
 
 using namespace cv;
 
@@ -144,6 +145,19 @@ int main(int argc, char** argv )
             line( img_matches, scene_corners[1] + Point2f( object.cols, 0), scene_corners[2] + Point2f( object.cols, 0), Scalar( 0, 255, 0), 4 );
             line( img_matches, scene_corners[2] + Point2f( object.cols, 0), scene_corners[3] + Point2f( object.cols, 0), Scalar( 0, 255, 0), 4 );
             line( img_matches, scene_corners[3] + Point2f( object.cols, 0), scene_corners[0] + Point2f( object.cols, 0), Scalar( 0, 255, 0), 4 );
+        }
+        
+        // get paper coords and draw
+        vector<Point> paper = findPaper(image, 127, 255, false);
+        Scalar blue = Scalar( 255, 0, 0 );
+        //std::cout << "paper points(lel):" << paper << std::endl;
+        
+        if (paper.size() > 0) { // only draw if detected (segfaults if you disregard)
+            Point2f offset = obj_corners[1];
+            line( img_matches, offset + Point2f(paper[0].x, paper[0].y), offset + Point2f(paper[1].x, paper[1].y), blue, 2);
+            line( img_matches, offset + Point2f(paper[1].x, paper[1].y), offset + Point2f(paper[2].x, paper[2].y), blue, 2);
+            line( img_matches, offset + Point2f(paper[2].x, paper[2].y), offset + Point2f(paper[3].x, paper[3].y), blue, 2);
+            line( img_matches, offset + Point2f(paper[3].x, paper[3].y), offset + Point2f(paper[0].x, paper[0].y), blue, 2);
         }
         
         //Show detected matches
