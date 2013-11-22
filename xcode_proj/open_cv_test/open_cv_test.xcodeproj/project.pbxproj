@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		20BD2146183EA75B006F3F4D /* DetectPaper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 20BD2144183EA75B006F3F4D /* DetectPaper.cpp */; };
 		4960AE351834ECF100D8AFE8 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4960AE341834ECF100D8AFE8 /* main.cpp */; };
 		4960AE371834ECF100D8AFE8 /* open_cv_test.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4960AE361834ECF100D8AFE8 /* open_cv_test.1 */; };
 		49B36E65183A7B1100AF80AE /* Other_test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49B36E63183A7B1100AF80AE /* Other_test.cpp */; };
@@ -202,8 +201,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		20BD2144183EA75B006F3F4D /* DetectPaper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DetectPaper.cpp; sourceTree = "<group>"; };
-		20BD2145183EA75B006F3F4D /* DetectPaper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DetectPaper.h; sourceTree = "<group>"; };
 		4960AE311834ECF100D8AFE8 /* open_cv_test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = open_cv_test; sourceTree = BUILT_PRODUCTS_DIR; };
 		4960AE341834ECF100D8AFE8 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		4960AE361834ECF100D8AFE8 /* open_cv_test.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = open_cv_test.1; sourceTree = "<group>"; };
@@ -592,8 +589,6 @@
 		4960AE331834ECF100D8AFE8 /* open_cv_test */ = {
 			isa = PBXGroup;
 			children = (
-				20BD2144183EA75B006F3F4D /* DetectPaper.cpp */,
-				20BD2145183EA75B006F3F4D /* DetectPaper.h */,
 				49C4CD9B1836810700337AF0 /* Boost Libraries */,
 				4960AE3D1834EE4B00D8AFE8 /* OpenCV Libraries */,
 				4960AE341834ECF100D8AFE8 /* main.cpp */,
@@ -847,7 +842,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				20BD2146183EA75B006F3F4D /* DetectPaper.cpp in Sources */,
 				49B36E69183BC23B00AF80AE /* old_code.cpp in Sources */,
 				49D34610183EAB2100BF85FD /* DetectPaper.cpp in Sources */,
 				49B36E65183A7B1100AF80AE /* Other_test.cpp in Sources */,
