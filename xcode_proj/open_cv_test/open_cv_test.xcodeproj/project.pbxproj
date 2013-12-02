@@ -129,6 +129,7 @@
 		49C4CD98183680F800337AF0 /* libboost_wserialization-mt.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 49C4CD22183680F800337AF0 /* libboost_wserialization-mt.dylib */; };
 		49C4CD99183680F800337AF0 /* libboost_wserialization.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 49C4CD23183680F800337AF0 /* libboost_wserialization.a */; };
 		49C4CD9A183680F800337AF0 /* libboost_wserialization.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 49C4CD24183680F800337AF0 /* libboost_wserialization.dylib */; };
+		49C99077184CA76F00D3458B /* paper_util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49C99075184CA76F00D3458B /* paper_util.cpp */; };
 		49D34610183EAB2100BF85FD /* DetectPaper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49D3460E183EAB2100BF85FD /* DetectPaper.cpp */; };
 		49DD09B71834F1F400812479 /* libopencv_calib3d.2.4.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 49DD09801834F1F400812479 /* libopencv_calib3d.2.4.7.dylib */; };
 		49DD09B81834F1F400812479 /* libopencv_calib3d.2.4.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 49DD09811834F1F400812479 /* libopencv_calib3d.2.4.7.dylib */; };
@@ -327,6 +328,8 @@
 		49C4CD22183680F800337AF0 /* libboost_wserialization-mt.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libboost_wserialization-mt.dylib"; path = "/usr/local/Cellar/boost/1.55.0/lib/libboost_wserialization-mt.dylib"; sourceTree = "<absolute>"; };
 		49C4CD23183680F800337AF0 /* libboost_wserialization.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libboost_wserialization.a; path = /usr/local/Cellar/boost/1.55.0/lib/libboost_wserialization.a; sourceTree = "<absolute>"; };
 		49C4CD24183680F800337AF0 /* libboost_wserialization.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libboost_wserialization.dylib; path = /usr/local/Cellar/boost/1.55.0/lib/libboost_wserialization.dylib; sourceTree = "<absolute>"; };
+		49C99075184CA76F00D3458B /* paper_util.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = paper_util.cpp; sourceTree = "<group>"; };
+		49C99076184CA76F00D3458B /* paper_util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = paper_util.h; sourceTree = "<group>"; };
 		49D3460E183EAB2100BF85FD /* DetectPaper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DetectPaper.cpp; sourceTree = "<group>"; };
 		49D3460F183EAB2100BF85FD /* DetectPaper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DetectPaper.h; sourceTree = "<group>"; };
 		49DD09801834F1F400812479 /* libopencv_calib3d.2.4.7.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libopencv_calib3d.2.4.7.dylib; path = /usr/local/Cellar/opencv/2.4.7/lib/libopencv_calib3d.2.4.7.dylib; sourceTree = "<absolute>"; };
@@ -592,6 +595,8 @@
 				49C4CD9B1836810700337AF0 /* Boost Libraries */,
 				4960AE3D1834EE4B00D8AFE8 /* OpenCV Libraries */,
 				4960AE341834ECF100D8AFE8 /* main.cpp */,
+				49C99075184CA76F00D3458B /* paper_util.cpp */,
+				49C99076184CA76F00D3458B /* paper_util.h */,
 				49D3460E183EAB2100BF85FD /* DetectPaper.cpp */,
 				49D3460F183EAB2100BF85FD /* DetectPaper.h */,
 				49B36E67183BC23B00AF80AE /* old_code.cpp */,
@@ -842,6 +847,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				49C99077184CA76F00D3458B /* paper_util.cpp in Sources */,
 				49B36E69183BC23B00AF80AE /* old_code.cpp in Sources */,
 				49D34610183EAB2100BF85FD /* DetectPaper.cpp in Sources */,
 				49B36E65183A7B1100AF80AE /* Other_test.cpp in Sources */,
