@@ -38,10 +38,9 @@ int main(int argc, char** argv )
     
     //Detect the keypoints using SURF Detector
     int minHessian = 500;
-    
-    FastFeatureDetector detector(15);
+    //FastFeatureDetector detector(15);
 //    OrbFeatureDetector detector(1500,1.2,8,31,0,2,ORB::HARRIS_SCORE, 31);
-    //SurfFeatureDetector detector( minHessian );
+    SurfFeatureDetector detector( minHessian );
     std::vector<KeyPoint> kp_object;
     
     detector.detect( object, kp_object );
@@ -50,9 +49,9 @@ int main(int argc, char** argv )
     
 
     //-- Step 2: Calculate descriptors (feature vectors)
-    FREAK extractor(true, true, 22.0, 4, vector<int>());
+//  FREAK extractor(true, true, 22.0, 4, vector<int>());
 //    OrbDescriptorExtractor extractor;
-//    SurfDescriptorExtractor extractor;
+    SurfDescriptorExtractor extractor;
     Mat des_object;
     
     extractor.compute( object, kp_object, des_object );
@@ -88,8 +87,8 @@ int main(int argc, char** argv )
     {
         Mat frame, eq_frame, image;
         cap >> frame;
-        cvtColor(frame, eq_frame , CV_RGB2GRAY);
-        equalizeHist(eq_frame, image);
+        cvtColor(frame, image, CV_RGB2GRAY);
+        //equalizeHist(eq_frame, image);
         
         if (framecount < 5)
         {
@@ -117,11 +116,11 @@ int main(int argc, char** argv )
             des_image.convertTo(des_image, CV_32F);
         }
 */
-        matcher.knnMatch(des_object, des_image, matches, 2);
+        matcher.knnMatch(des_object, des_image, matches, 4);
         std::cout << " matches: " << matches.size() << std::endl;
         for(int i = 0; i < min(des_image.rows-1,(int) matches.size()); i++) //THIS LOOP IS SENSITIVE TO SEGFAULTS
         {
-            if((matches[i][0].distance < 0.8*(matches[i][1].distance)) && ((int) matches[i].size()<=2 && (int) matches[i].size()>0))
+            if((matches[i][0].distance < 0.8*(matches[i][1].distance)) && ((int) matches[i].size()<=4 && (int) matches[i].size()>0))
             {
                 good_matches.push_back(matches[i][0]);
             }
