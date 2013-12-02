@@ -16,9 +16,9 @@ using namespace cv;
 using namespace boost::filesystem;
 
 
-void readme();
-vector< Mat > getMatFromDir(string dir);
-int detect(Mat obj, Mat scene);
+//void readme();
+//vector< Mat > getMatFromDir(string dir);
+//int detect(Mat obj, Mat scene);
 
 const double NND_RATIO = 0.7;
 const double PATTERN_SCALE = 22.0;
@@ -41,7 +41,7 @@ int kmain( int argc, char** argv )
      for( int i = 0; i < img_objs.size(); i++ ) {
      detect(img_objs.at(i), img_scene);
      }
-     */
+     
     vector< Mat > img_objs = getMatFromDir( argv[1]);
     time_t start, end;
     int counter=0;
@@ -79,10 +79,10 @@ int kmain( int argc, char** argv )
         
         key = waitKey(3); }
     
-    destroyAllWindows();
+    destroyAllWindows();*/
     return 0;
 }
-
+/*
 int detect(Mat img_object, Mat img_scene) {
     clock_t t1,t2;
     t1=clock();
@@ -185,9 +185,10 @@ int detect(Mat img_object, Mat img_scene) {
     return 0;
     
 }
-
+*/
 
 /** @function getMatFromDir */
+/*
 vector< Mat > getMatFromDir(string dir)
 {
     vector< Mat > files;
@@ -222,7 +223,8 @@ vector< Mat > getMatFromDir(string dir)
     }
     return files;
 }
-
+*/
 /** @function readme */
+/*
 void readme()
-{ cout << " Usage: ./open_cv_test <img scene> <folder train>" << endl; }
+{ cout << " Usage: ./open_cv_test <img scene> <folder train>" << endl; }*/

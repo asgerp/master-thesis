@@ -129,24 +129,24 @@ int main(int argc, char** argv )
                 perspectiveTransform( obj_corners, scene_corners, H);
                 
                 //Draw lines between the corners (the mapped object in the scene image )
-                std::cout << "(" << scene_corners[0] << "," << scene_corners[1] << "," << scene_corners[2] << "," << scene_corners[3] << ")" << std::endl;
-                line( frame, scene_corners[0] , scene_corners[1] , Scalar( 0, 255, 0), 4 );
-                line( frame, scene_corners[1] , scene_corners[2] , Scalar( 0, 255, 0), 4 );
-                line( frame, scene_corners[2] , scene_corners[3] , Scalar( 0, 255, 0), 4 );
-                line( frame, scene_corners[3] , scene_corners[0] , Scalar( 0, 255, 0), 4 );
+                line( image, scene_corners[0] , scene_corners[1] , Scalar( 0, 255, 0), 4 );
+                line( image, scene_corners[1] , scene_corners[2] , Scalar( 0, 255, 0), 4 );
+                line( image, scene_corners[2] , scene_corners[3] , Scalar( 0, 255, 0), 4 );
+                line( image, scene_corners[3] , scene_corners[0] , Scalar( 0, 255, 0), 4 );
             }
             
             
-            imshow( "Good Matches", frame );
-            time(&end);
-            ++counter;
-            std::cout <<"fps: "<< counter/ difftime(end,start) <<std::endl <<std::endl;
-            t2=clock();
-            float diff ((float)t2-(float)t1);
-            float seconds = diff / CLOCKS_PER_SEC;
-            std::cout << "SURF/SURF -> RANSAC took " << seconds << " SECONDS" << std::endl;
+            
         }
-        
+        imshow( "Good Matches", image );
+        time(&end);
+        ++counter;
+        std::cout <<"fps: "<< counter/ difftime(end,start) <<std::endl <<std::endl;
+        t2=clock();
+        float diff ((float)t2-(float)t1);
+        float seconds = diff / CLOCKS_PER_SEC;
+        std::cout << "SURF/SURF -> RANSAC took " << seconds << " SECONDS" << std::endl;
+
         
         key = waitKey(1);
     }

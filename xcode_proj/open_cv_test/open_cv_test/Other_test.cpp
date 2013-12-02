@@ -19,7 +19,8 @@
 
 
 using namespace cv;
-
+/*
+int mdmain();
 int mdmain()
 {
     Mat object = imread( "photo2.jpg", CV_LOAD_IMAGE_GRAYSCALE );
@@ -126,3 +127,4 @@ int mdmain()
     }
     return 0;
 }
+*/
