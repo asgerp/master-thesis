@@ -30,7 +30,6 @@ vector< Mat > PaperUtil::getMatFromDir(string dir)
     try {
         if (exists(dir)){
             if (is_directory(dir)) {
-                cout << dir << " is a directory containing:\n";
                 
                 typedef vector<path> vec;             // store paths,
                 vec v;                                // so we can sort them later
@@ -42,11 +41,9 @@ vector< Mat > PaperUtil::getMatFromDir(string dir)
                 
                 for (vec::const_iterator it (v.begin()); it != v.end(); ++it)
                 {
-                    cout << "extenstion is: " << extension(*it) << endl;
                     if(extension(*it) == ".jpg" || extension(*it) == ".png"){
                         string file_path = it->string();
                         files.push_back(imread(file_path, CV_LOAD_IMAGE_GRAYSCALE));
-                        cout << "   " << *it << '\n';
                     }
                     
                 }
@@ -85,7 +82,7 @@ vector< Mat > PaperUtil::getDescriptorsFromKP(vector<Mat> templates, vector< vec
 
 /** @function readme */
 void PaperUtil::readme()
-{ cout << " Usage: ./open_cv_test <img scene> <folder train>" << endl; }
+{ cout << " Usage: ./open_cv_test folder_with_templates/ " << endl; }
 
 
 

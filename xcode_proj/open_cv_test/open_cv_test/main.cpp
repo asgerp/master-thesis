@@ -19,6 +19,7 @@
 #include "opencv2/nonfree/features2d.hpp"
 
 #include "DetectPaper.h"
+#include "paper_util.h"
 
 using namespace cv;
 
@@ -26,42 +27,21 @@ int main(int argc, char** argv )
 {
     
     if(argc != 2){
+        PaperUtil::readme();
         return -1;
     }
-    Mat object = imread( argv[1], CV_LOAD_IMAGE_GRAYSCALE );
+    // init templates. calculate key points and descriptors for templates
+    vector< Mat > templates = PaperUtil::getMatFromDir(argv[1]);
+    vector< vector< KeyPoint > > template_kp = PaperUtil::getKeyPointsFromTemplates(templates);
+    vector< Mat > template_descritors = PaperUtil::getDescriptorsFromKP(templates, template_kp);
     
-    if( !object.data )
-    {
-        std::cout<< "Error reading object " << std::endl;
-        return -1;
-    }
-    
-    //Detect the keypoints using SURF Detector
+    // init detectors, extractors, and matchers
     int minHessian = 500;
-    //FastFeatureDetector detector(15);
-//    OrbFeatureDetector detector(1500,1.2,8,31,0,2,ORB::HARRIS_SCORE, 31);
     SurfFeatureDetector detector( minHessian );
-    std::vector<KeyPoint> kp_object;
-    
-    detector.detect( object, kp_object );
-    
-    //Calculate descriptors (feature vectors)
-    
-
-    //-- Step 2: Calculate descriptors (feature vectors)
-//  FREAK extractor(true, true, 22.0, 4, vector<int>());
-//    OrbDescriptorExtractor extractor;
     SurfDescriptorExtractor extractor;
-    Mat des_object;
-    
-    extractor.compute( object, kp_object, des_object );
-    
-    /*if(des_object.type()!=CV_32F) {
-        des_object.convertTo(des_object, CV_32F);
-    }*/
-    std::cout << des_object.size() << std::endl;
     BFMatcher matcher;
     
+    // init video capture
     VideoCapture cap(0);
     cap.set(CV_CAP_PROP_FRAME_WIDTH, 320);
     cap.set(CV_CAP_PROP_FRAME_HEIGHT, 240);
@@ -69,17 +49,17 @@ int main(int argc, char** argv )
     
     namedWindow("Good Matches");
     
-    std::vector<Point2f> obj_corners(4);
-    
-    //Get the corners from the object
-    obj_corners[0] = cvPoint(0,0);
-    obj_corners[1] = cvPoint( object.cols, 0 );
-    obj_corners[2] = cvPoint( object.cols, object.rows );
-    obj_corners[3] = cvPoint( 0, object.rows );
+    /*std::vector<Point2f> obj_corners(4);
+     
+     //Get the corners from the object
+     obj_corners[0] = cvPoint(0,0);
+     obj_corners[1] = cvPoint( object.cols, 0 );
+     obj_corners[2] = cvPoint( object.cols, object.rows );
+     obj_corners[3] = cvPoint( 0, object.rows );*/
     time_t start, end;
     time(&start);
     clock_t t1,t2;
-
+    
     int counter=0;
     char key = 'a';
     int framecount = 0;
@@ -87,8 +67,8 @@ int main(int argc, char** argv )
     {
         Mat frame, eq_frame, image;
         cap >> frame;
-        cvtColor(frame, image, CV_RGB2GRAY);
-        //equalizeHist(eq_frame, image);
+        cvtColor(frame, eq_frame, CV_RGB2GRAY);
+        equalizeHist(eq_frame, image);
         
         if (framecount < 5)
         {
@@ -98,7 +78,7 @@ int main(int argc, char** argv )
             continue;
         }
         t1=clock();
-        Mat des_image, img_matches;
+        Mat des_image;
         std::vector<KeyPoint> kp_image;
         std::vector<vector<DMatch > > matches;
         std::vector<DMatch > good_matches;
@@ -108,71 +88,66 @@ int main(int argc, char** argv )
         Mat H;
         
         
-
+        
         detector.detect( image, kp_image );
         extractor.compute( image, kp_image, des_image );
-        /*
-        if(des_image.type()!=CV_32F) {
-            des_image.convertTo(des_image, CV_32F);
-        }
-*/
-        matcher.knnMatch(des_object, des_image, matches, 4);
-        std::cout << " matches: " << matches.size() << std::endl;
-        for(int i = 0; i < min(des_image.rows-1,(int) matches.size()); i++) //THIS LOOP IS SENSITIVE TO SEGFAULTS
-        {
-            if((matches[i][0].distance < 0.8*(matches[i][1].distance)) && ((int) matches[i].size()<=4 && (int) matches[i].size()>0))
+        for(vector<int>::size_type i = 0; i != templates.size(); i++) {
+            
+            
+            matcher.knnMatch(template_descritors[i], des_image, matches, 4);
+            
+            std::cout << " matches: " << matches.size() << std::endl;
+            for(int h = 0; h < min(des_image.rows-1,(int) matches.size()); h++) //THIS LOOP IS SENSITIVE TO SEGFAULTS
             {
-                good_matches.push_back(matches[i][0]);
-            }
-        }
-        
-        //Draw only "good" matches
-        std::cout << "good matches: " << good_matches.size() << std::endl;
-        drawMatches( object, kp_object, image, kp_image, good_matches, img_matches, Scalar::all(-1), Scalar::all(-1), vector<char>(), DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );
-        
-        if (good_matches.size() >= 4)
-        {
-            for( int i = 0; i < good_matches.size(); i++ )
-            {
-                //Get the keypoints from the good matches
-                obj.push_back( kp_object[ good_matches[i].queryIdx ].pt );
-                scene.push_back( kp_image[ good_matches[i].trainIdx ].pt );
+                if((matches[h][0].distance < 0.8*(matches[h][1].distance)) && ((int) matches[h].size()<=4 && (int) matches[h].size()>0))
+                {
+                    good_matches.push_back(matches[h][0]);
+                }
             }
             
-            H = findHomography( obj, scene, CV_RANSAC );
+            //Draw only "good" matches
+            std::cout << "good matches: " << good_matches.size() << std::endl;
+            //drawMatches( object, kp_object, image, kp_image, good_matches, img_matches, Scalar::all(-1), Scalar::all(-1), vector<char>(), DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );
             
-            perspectiveTransform( obj_corners, scene_corners, H);
+            if (good_matches.size() >= 4)
+            {
+                for( int j = 0; j < good_matches.size(); j++ )
+                {
+                    //Get the keypoints from the good matches
+                    obj.push_back( template_kp[i][ good_matches[j].queryIdx ].pt );
+                    scene.push_back( kp_image[ good_matches[j].trainIdx ].pt );
+                }
+                
+                H = findHomography( obj, scene, CV_RANSAC );
+                std::vector<Point2f> obj_corners(4);
+                
+                //Get the corners from the object
+                obj_corners[0] = cvPoint(0,0);
+                obj_corners[1] = cvPoint( templates[i].cols, 0 );
+                obj_corners[2] = cvPoint( templates[i].cols, templates[i].rows );
+                obj_corners[3] = cvPoint( 0, templates[i].rows );
+                perspectiveTransform( obj_corners, scene_corners, H);
+                
+                //Draw lines between the corners (the mapped object in the scene image )
+                std::cout << "(" << scene_corners[0] << "," << scene_corners[1] << "," << scene_corners[2] << "," << scene_corners[3] << ")" << std::endl;
+                line( frame, scene_corners[0] , scene_corners[1] , Scalar( 0, 255, 0), 4 );
+                line( frame, scene_corners[1] , scene_corners[2] , Scalar( 0, 255, 0), 4 );
+                line( frame, scene_corners[2] , scene_corners[3] , Scalar( 0, 255, 0), 4 );
+                line( frame, scene_corners[3] , scene_corners[0] , Scalar( 0, 255, 0), 4 );
+            }
             
-            //Draw lines between the corners (the mapped object in the scene image )
-            line( img_matches, scene_corners[0] + Point2f( object.cols, 0), scene_corners[1] + Point2f( object.cols, 0), Scalar(0, 255, 0), 4 );
-            line( img_matches, scene_corners[1] + Point2f( object.cols, 0), scene_corners[2] + Point2f( object.cols, 0), Scalar( 0, 255, 0), 4 );
-            line( img_matches, scene_corners[2] + Point2f( object.cols, 0), scene_corners[3] + Point2f( object.cols, 0), Scalar( 0, 255, 0), 4 );
-            line( img_matches, scene_corners[3] + Point2f( object.cols, 0), scene_corners[0] + Point2f( object.cols, 0), Scalar( 0, 255, 0), 4 );
+            
+            imshow( "Good Matches", frame );
+            time(&end);
+            ++counter;
+            std::cout <<"fps: "<< counter/ difftime(end,start) <<std::endl <<std::endl;
+            t2=clock();
+            float diff ((float)t2-(float)t1);
+            float seconds = diff / CLOCKS_PER_SEC;
+            std::cout << "SURF/SURF -> RANSAC took " << seconds << " SECONDS" << std::endl;
         }
         
-        // get paper coords and draw
-        vector<Point> paper = findPaper(image, 127, 255, false);
-        Scalar blue = Scalar( 255, 0, 0 );
-        //std::cout << "paper points(lel):" << paper << std::endl;
         
-        if (paper.size() > 0) { // only draw if detected (segfaults if you disregard)
-            Point2f offset = obj_corners[1];
-            line( img_matches, offset + Point2f(paper[0].x, paper[0].y), offset + Point2f(paper[1].x, paper[1].y), blue, 2);
-            line( img_matches, offset + Point2f(paper[1].x, paper[1].y), offset + Point2f(paper[2].x, paper[2].y), blue, 2);
-            line( img_matches, offset + Point2f(paper[2].x, paper[2].y), offset + Point2f(paper[3].x, paper[3].y), blue, 2);
-            line( img_matches, offset + Point2f(paper[3].x, paper[3].y), offset + Point2f(paper[0].x, paper[0].y), blue, 2);
-        }
-        
-        //Show detected matches
-        imshow( "Good Matches", img_matches );
-        time(&end);
-        ++counter;
-        std::cout <<"fps: "<< counter/ difftime(end,start) <<std::endl <<std::endl;
-        t2=clock();
-        float diff ((float)t2-(float)t1);
-        float seconds = diff / CLOCKS_PER_SEC;
-        std::cout << "SURF/SURF -> RANSAC took " << seconds << " SECONDS" << std::endl;
-
         key = waitKey(1);
     }
     return 0;
