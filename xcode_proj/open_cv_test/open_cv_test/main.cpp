@@ -23,9 +23,14 @@
 
 using namespace cv;
 
+#define PAPER_DEBUG(x) do { \
+if (DEBUG) { std::cerr << __func__ << " " << __LINE__ << " " << x << std::endl; } \
+} while (0)
+
+
 int main(int argc, char** argv )
 {
-    
+    PAPER_DEBUG("here");
     if(argc != 2){
         PaperUtil::readme();
         return -1;
@@ -91,8 +96,14 @@ int main(int argc, char** argv )
         
         detector.detect( image, kp_image );
         extractor.compute( image, kp_image, des_image );
+        
+        // OPTIMIZE THIS
+        // function needs to know/ have access to:
+        /**
+         * templates, template_descritors[i]. des_image, matches
+         * good_matches, template_kp, kp_image, obj, scene, scene_corners, image
+         */
         for(vector<int>::size_type i = 0; i != templates.size(); i++) {
-            
             
             matcher.knnMatch(template_descritors[i], des_image, matches, 4);
             
