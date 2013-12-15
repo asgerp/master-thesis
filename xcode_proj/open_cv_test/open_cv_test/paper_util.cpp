@@ -114,7 +114,7 @@ bool PaperUtil::checkAnglesInVector(vector<Point2f> v) {
     else return false;
 }
 // helper function, determines angle between three points
-double PaperUtil::angle( Point pt1, Point pt2, Point pt0 ) {
+double PaperUtil::angle( Point2f pt1, Point2f pt2, Point2f pt0 ) {
     double dx1 = pt1.x - pt0.x;
     double dy1 = pt1.y - pt0.y;
     double dx2 = pt2.x - pt0.x;

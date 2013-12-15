@@ -24,7 +24,7 @@ public:
     static double getWallTime();
     static bool checkAnglesInVector(vector<Point2f> v);
 private:
-    static double angle(Point pt1, Point pt2, Point pt0 );
+    static double angle(Point2f pt1, Point2f pt2, Point2f pt0 );
 };
 
 
