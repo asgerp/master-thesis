@@ -19,6 +19,7 @@ class PaperUtil {
         static vector< Mat > getMatFromDir(string dir);
         static vector< vector<KeyPoint> >getKeyPointsFromTemplates(vector< Mat >);
         static vector< Mat > getDescriptorsFromKP(vector<Mat>, vector< vector<KeyPoint> >);
+        static void drawLine(Mat img, vector<Point2f> corners);
         static void readme();
 };
 

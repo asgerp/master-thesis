@@ -84,7 +84,13 @@ vector< Mat > PaperUtil::getDescriptorsFromKP(vector<Mat> templates, vector< vec
 void PaperUtil::readme()
 { cout << " Usage: ./open_cv_test folder_with_templates/ " << endl; }
 
-
+void PaperUtil::drawLine(Mat img, vector<Point2f> corners) {
+    line( img, corners[0] , corners[1] , Scalar( 0, 255, 0), 4 );
+    line( img, corners[1] , corners[2] , Scalar( 0, 255, 0), 4 );
+    line( img, corners[2] , corners[3] , Scalar( 0, 255, 0), 4 );
+    line( img, corners[3] , corners[0] , Scalar( 0, 255, 0), 4 );
+    
+}
 
 
 
