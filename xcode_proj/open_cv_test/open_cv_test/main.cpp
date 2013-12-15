@@ -24,20 +24,29 @@
 
 using namespace cv;
 
+
+#ifdef DEBUG
 #define PAPER_DEBUG(x) do { \
 if (DEBUG) { std::cerr << __func__ << " " << __LINE__ << " " << x << std::endl; } \
 } while (0)
+#else
+#define PAPER_DEBUG(x)
+#endif
 
 
 int main(int argc, char** argv )
 {
     PAPER_DEBUG("here");
+    std::string path;
     if(argc != 2){
+        path = "/Users/asger/Documents/Skole/Master Thesis/runfolder/objs";
         PaperUtil::readme();
-        return -1;
+    } else{
+        path = argv[1];
     }
+    PAPER_DEBUG(path);
     // init templates. calculate key points and descriptors for templates
-    vector< Mat > templates = PaperUtil::getMatFromDir(argv[1]);
+    vector< Mat > templates = PaperUtil::getMatFromDir(path);
     vector< vector< KeyPoint > > template_kp = PaperUtil::getKeyPointsFromTemplates(templates);
     vector< Mat > template_descriptors = PaperUtil::getDescriptorsFromKP(templates, template_kp);
     
@@ -108,6 +117,7 @@ int main(int argc, char** argv )
         //for(vector<int>::size_type i = 0; i != templates.size(); i++) {
             // the scope of the block is similar to inner for loops.
             // So the block should be able to read all varialbles
+
             dispatch_apply(templates.size(), aQueue, ^(size_t i) {
            //     code
            // })
