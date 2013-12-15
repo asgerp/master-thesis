@@ -15,13 +15,16 @@ using namespace std;
 using namespace cv;
 
 class PaperUtil {
-    public:
-        static vector< Mat > getMatFromDir(string dir);
-        static vector< vector<KeyPoint> >getKeyPointsFromTemplates(vector< Mat >);
-        static vector< Mat > getDescriptorsFromKP(vector<Mat>, vector< vector<KeyPoint> >);
-        static void drawLine(Mat img, vector<Point2f> corners);
-        static void readme();
-        static double getWallTime();
+public:
+    static vector< Mat > getMatFromDir(string dir);
+    static vector< vector<KeyPoint> >getKeyPointsFromTemplates(vector< Mat >);
+    static vector< Mat > getDescriptorsFromKP(vector<Mat>, vector< vector<KeyPoint> >);
+    static void drawLine(Mat img, vector<Point2f> corners);
+    static void readme();
+    static double getWallTime();
+    static bool checkAnglesInVector(vector<Point2f> v);
+private:
+    static double angle(Point pt1, Point pt2, Point pt0 );
 };
 
 

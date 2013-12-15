@@ -102,5 +102,26 @@ double PaperUtil::getWallTime(){
     return (double)time.tv_sec + (double)time.tv_usec * .000001;
 }
 
+// check if angle is kinda like in a square
+bool PaperUtil::checkAnglesInVector(vector<Point2f> v) {
+    double maxCosine = 0;
+    for (int j = 2; j < 5; j++) {
+        double cosine = fabs(angle(v[j%4], v[j-2], v[j-1]));
+        maxCosine = MAX(maxCosine, cosine);
+    }
+    if (maxCosine < 0.3)
+        return true;
+    else return false;
+}
+// helper function, determines angle between three points
+double PaperUtil::angle( Point pt1, Point pt2, Point pt0 ) {
+    double dx1 = pt1.x - pt0.x;
+    double dy1 = pt1.y - pt0.y;
+    double dx2 = pt2.x - pt0.x;
+    double dy2 = pt2.y - pt0.y;
+    return (dx1*dx2 + dy1*dy2)/sqrt((dx1*dx1 + dy1*dy1)*(dx2*dx2 + dy2*dy2) + 1e-10);
+}
+
+
 
 
