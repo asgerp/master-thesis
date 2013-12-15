@@ -49,7 +49,7 @@ vector< Point > findPaper(Mat image, int minThresh, int maxThresh, bool preProce
 vector<Point> getBestContour(vector<vector<Point> > contours) {
     vector<Point> approx, largest;
     vector<vector<Point > > squares;
-    int largestSize;
+    int largestSize = 0;
     
     for (size_t i = 0; i < contours.size(); i++) {
         // approximate contour with accuracy proportional
