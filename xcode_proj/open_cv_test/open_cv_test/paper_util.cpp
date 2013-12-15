@@ -15,6 +15,7 @@
 
 #include <stdio.h>
 #include <iostream>
+#include <sys/time.h>
 
 
 #include "paper_util.h"
@@ -90,6 +91,15 @@ void PaperUtil::drawLine(Mat img, vector<Point2f> corners) {
     line( img, corners[2] , corners[3] , Scalar( 0, 255, 0), 4 );
     line( img, corners[3] , corners[0] , Scalar( 0, 255, 0), 4 );
     
+}
+
+double PaperUtil::getWallTime(){
+    struct timeval time;
+    if (gettimeofday(&time,NULL)){
+        //  Handle error
+        return 0;
+    }
+    return (double)time.tv_sec + (double)time.tv_usec * .000001;
 }
 
 

@@ -8,7 +8,7 @@
 
 #include "Other_test.h"
 #include <stdio.h>
-#include <time.h>
+#include <sys/time.h>
 #include <iostream>
 #include <dispatch/dispatch.h>
 #include "opencv2/core/core.hpp"
@@ -71,8 +71,12 @@ int main(int argc, char** argv )
      obj_corners[1] = cvPoint( object.cols, 0 );
      obj_corners[2] = cvPoint( object.cols, object.rows );
      obj_corners[3] = cvPoint( 0, object.rows );*/
-    time_t start, end;
-    time(&start);
+    
+    //time_t start, end;
+    double start, end;
+    //time(&start);
+    start = PaperUtil::getWallTime();
+    
     clock_t t1,t2;
     
     int counter=0;
@@ -89,7 +93,8 @@ int main(int argc, char** argv )
         {
             framecount++;
             ++counter;
-            time(&end);
+            //time(&end);
+            end = PaperUtil::getWallTime();
             continue;
         }
         t1=clock();
@@ -174,7 +179,8 @@ int main(int argc, char** argv )
             
         });*/
         imshow( "Good Matches", image );
-        time(&end);
+        //time(&end);
+        end = PaperUtil::getWallTime();
         ++counter;
         std::cout <<"fps: "<< counter/ difftime(end,start) <<std::endl <<std::endl;
         t2=clock();
@@ -187,3 +193,5 @@ int main(int argc, char** argv )
     }
     return 0;
 }
+
+

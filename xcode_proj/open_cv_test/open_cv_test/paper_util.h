@@ -21,6 +21,7 @@ class PaperUtil {
         static vector< Mat > getDescriptorsFromKP(vector<Mat>, vector< vector<KeyPoint> >);
         static void drawLine(Mat img, vector<Point2f> corners);
         static void readme();
+        static double getWallTime();
 };
 
 
