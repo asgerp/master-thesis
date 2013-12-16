@@ -51,10 +51,13 @@ int main(int argc, char** argv )
     vector< Mat > template_descriptors = PaperUtil::getDescriptorsFromKP(templates, template_kp);
     
     // init detectors, extractors, and matchers
-    int minHessian = 500;
-    SurfFeatureDetector detector( minHessian );
-    SurfDescriptorExtractor extractor;
-    BFMatcher matcher;
+  //  int minHessian = 500;
+    FastFeatureDetector detector;
+    FREAK extractor(true, true, 22.0, 4, vector<int>());
+//    SurfFeatureDetector detector( minHessian );
+    //ORB detector;
+    //SurfDescriptorExtractor extractor;
+    BFMatcher matcher(NORM_HAMMING);
     
     // init video capture
     VideoCapture cap(0);
@@ -162,10 +165,11 @@ int main(int argc, char** argv )
                 perspectiveTransform( obj_corners, scene_corners, H);
 
                 //Draw lines between the corners (the mapped object in the scene image )
-                if(PaperUtil::checkAnglesInVector(obj_corners) == true && isContourConvex(Mat(obj_corners))){
+                int area = fabs(contourArea(Mat(scene_corners)));
+                if(PaperUtil::checkAnglesInVector(scene_corners) == true && isContourConvex(Mat(scene_corners)) && area > 5000){
                     PaperUtil::drawLine(image, scene_corners);
-                } 
-                PAPER_DEBUG(difftime(disp_start, dispatch_walltime(NULL, 0)));
+                }
+                //PAPER_DEBUG(difftime(disp_start, dispatch_walltime(NULL, 0)));
             }
         });
         //}

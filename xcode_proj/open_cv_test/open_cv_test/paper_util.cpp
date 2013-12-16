@@ -58,8 +58,10 @@ vector< Mat > PaperUtil::getMatFromDir(string dir)
 }
 vector< vector<KeyPoint> > PaperUtil::getKeyPointsFromTemplates(vector<Mat> templates){
     //Detect the keypoints using SURF Detector
-    int minHessian = 500;
-    SurfFeatureDetector detector( minHessian );
+    //int minHessian = 500;
+    //SurfFeatureDetector detector( minHessian );
+    FastFeatureDetector detector;
+    //ORB detector;
     vector< vector<KeyPoint> > key_points;
     for(vector<Mat>::iterator it = templates.begin(); it != templates.end(); ++it) {
         vector<KeyPoint> kp_object;
@@ -70,8 +72,8 @@ vector< vector<KeyPoint> > PaperUtil::getKeyPointsFromTemplates(vector<Mat> temp
 }
 
 vector< Mat > PaperUtil::getDescriptorsFromKP(vector<Mat> templates, vector< vector<KeyPoint> > key_points){
-    SurfDescriptorExtractor extractor;
-
+    //SurfDescriptorExtractor extractor;
+    FREAK extractor(true, true, 22.0, 4);
     vector< Mat > descriptor_objects;
     for(vector<int>::size_type i = 0; i != templates.size(); i++) {
         Mat des_object;
@@ -105,6 +107,7 @@ double PaperUtil::getWallTime(){
 // check if angle is kinda like in a square
 bool PaperUtil::checkAnglesInVector(vector<Point2f> v) {
     double maxCosine = 0;
+    double degreesSummed = 0;
     for (int j = 2; j < 5; j++) {
         double cosine = fabs(angle(v[j%4], v[j-2], v[j-1]));
         maxCosine = MAX(maxCosine, cosine);
