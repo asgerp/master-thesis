@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		49CEE1021875BE1400CCD9B9 /* libjson_spirit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 49CEE1001875BE1400CCD9B9 /* libjson_spirit.a */; };
+		49CEE1031875BE1400CCD9B9 /* libjson_spirit.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 49CEE1011875BE1400CCD9B9 /* libjson_spirit.dylib */; };
 		49E41EEE18673E0700851F3C /* libboost_atomic-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 49E41E7818673E0600851F3C /* libboost_atomic-mt.a */; };
 		49E41EEF18673E0700851F3C /* libboost_atomic-mt.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 49E41E7918673E0600851F3C /* libboost_atomic-mt.dylib */; };
 		49E41EF018673E0700851F3C /* libboost_chrono-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 49E41E7A18673E0600851F3C /* libboost_chrono-mt.a */; };
@@ -146,6 +148,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		49CEE1001875BE1400CCD9B9 /* libjson_spirit.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libjson_spirit.a; path = /usr/local/Cellar/json_spirit/4.07/lib/libjson_spirit.a; sourceTree = "<absolute>"; };
+		49CEE1011875BE1400CCD9B9 /* libjson_spirit.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libjson_spirit.dylib; path = /usr/local/Cellar/json_spirit/4.07/lib/libjson_spirit.dylib; sourceTree = "<absolute>"; };
 		49E41E7818673E0600851F3C /* libboost_atomic-mt.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libboost_atomic-mt.a"; path = "/usr/local/Cellar/boost/1.55.0/lib/libboost_atomic-mt.a"; sourceTree = "<absolute>"; };
 		49E41E7918673E0600851F3C /* libboost_atomic-mt.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libboost_atomic-mt.dylib"; path = "/usr/local/Cellar/boost/1.55.0/lib/libboost_atomic-mt.dylib"; sourceTree = "<absolute>"; };
 		49E41E7A18673E0600851F3C /* libboost_chrono-mt.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libboost_chrono-mt.a"; path = "/usr/local/Cellar/boost/1.55.0/lib/libboost_chrono-mt.a"; sourceTree = "<absolute>"; };
@@ -278,6 +282,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				49CEE1021875BE1400CCD9B9 /* libjson_spirit.a in Frameworks */,
+				49CEE1031875BE1400CCD9B9 /* libjson_spirit.dylib in Frameworks */,
 				49E41F6718673E4000851F3C /* libjson.a in Frameworks */,
 				49E41F6818673E4000851F3C /* libjson.dylib in Frameworks */,
 				49E41EEE18673E0700851F3C /* libboost_atomic-mt.a in Frameworks */,
@@ -533,6 +539,8 @@
 		49E41F6918673E4600851F3C /* Json Library */ = {
 			isa = PBXGroup;
 			children = (
+				49CEE1001875BE1400CCD9B9 /* libjson_spirit.a */,
+				49CEE1011875BE1400CCD9B9 /* libjson_spirit.dylib */,
 				49E41F6518673E4000851F3C /* libjson.a */,
 				49E41F6618673E4000851F3C /* libjson.dylib */,
 			);

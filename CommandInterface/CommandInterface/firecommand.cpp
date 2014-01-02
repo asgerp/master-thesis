@@ -10,33 +10,51 @@
 #include <boost/filesystem.hpp>
 #include <stdio.h>
 #include <stdlib.h>
-#include <json/json.h>
+#include <fstream>
+//#include <json/json.h>
+#include "json_spirit.h"
 #include <map>
 
-class FireCommand {
-    std::map<std::string, std::string> commands;
-public:
-    FireCommand(std::string);
-    ~FireCommand();
-    void fire_command (std::string);
-    void store_command(std::string, std::string);
-    void delete_command(std::string);
-private:
-    void load_commands(std::string);
-    
-};
 
+using namespace json_spirit;
 
-
-FireCommand::FireCommand(std::string path_to_commands){
+Firecommand::Firecommand(std::string path_to_commands){
     load_commands(path_to_commands);
 }
 
-void FireCommand::fire_command (std::string template_key){
-    std::string current_command = commands.find(template_key)->second;
+void Firecommand::fire_command (std::string template_key){
+
+    std::string current_command = find_value( commands.get_obj(), template_key ).get_str();
     std::system(current_command.c_str());
 }
 
-void FireCommand::load_commands(std::string path_to_commands) {
+void Firecommand::load_commands(std::string path_to_commands) {
+    
+    std::ifstream is( path_to_commands.c_str() );
+    
+    mValue value;
+    read( is, value );
+    std::string content( (std::istreambuf_iterator<char>(is) ),
+                        (std::istreambuf_iterator<char>()    ) );
+    
+    commands = value;
+
+    
+    std::string hej = find_value( value.get_obj(), "command" ).get_str();
+    
+    
+    std::cerr << hej << std::endl;
     
 }
+
+const mValue& Firecommand::find_value(const mObject& obj, const std::string& name )
+{
+    mObject::const_iterator i = obj.find(name);
+    
+    assert(i != obj.end());
+    assert(i->first == name);
+    
+    return i->second;
+}
+
+
