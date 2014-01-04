@@ -7,12 +7,13 @@
 //
 
 #include <iostream>
+#include "firecommand.h"
 
 int main(int argc, const char * argv[])
 {
-
-    // insert code here...
-    std::cout << "Hello, World!\n";
+    
+    Firecommand fc(argv[1]);
+    std::string command = argv[2];
+    fc.fire_command(command);
     return 0;
 }
-

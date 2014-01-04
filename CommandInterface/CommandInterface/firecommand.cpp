@@ -38,19 +38,12 @@ void Firecommand::load_commands(std::string path_to_commands) {
                         (std::istreambuf_iterator<char>()    ) );
     
     commands = value;
-
-    
-    std::string hej = find_value( value.get_obj(), "command" ).get_str();
-    
-    
-    std::cerr << hej << std::endl;
-    
 }
 
 const mValue& Firecommand::find_value(const mObject& obj, const std::string& name )
 {
     mObject::const_iterator i = obj.find(name);
-    
+
     assert(i != obj.end());
     assert(i->first == name);
     
