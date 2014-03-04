@@ -38,8 +38,6 @@ if (DEBUG) { std::cerr << "["<< __func__ << ":" << __LINE__ << "] " << x << std:
 
 int main(int argc, char** argv )
 {
-    bool freak = false;
-    
     std::string path;
     if(argc != 2){
         path = "/Users/asger/Documents/Skole/Master Thesis/runfolder/objs";
@@ -50,14 +48,15 @@ int main(int argc, char** argv )
     
     // init detectors, extractors, and matchers
     
-/*
+
     BFMatcher matcher(NORM_HAMMING);
     FastFeatureDetector detector;
-    FREAK extractor(true, true, 22.0, 4, vector<int>());*/
-    int minHessian = 500;
+    FREAK extractor(true, true, 8.0, 4, vector<int>());
+/*    int minHessian = 500;
     BFMatcher matcher;
     SurfFeatureDetector detector( minHessian );
-    SurfDescriptorExtractor extractor;
+//    BRISK detector;
+    SurfDescriptorExtractor extractor;*/
 
     // init templates. calculate key points and descriptors for templates
     vector< Mat > templates = PaperUtil::getMatFromDir(path);
@@ -128,7 +127,7 @@ int main(int argc, char** argv )
             std::vector<Point2f> scene_corners(4);
             Mat H;
             matcher.knnMatch(template_descriptors[i], des_image, matches, 2);
-            PAPER_DEBUG(" matches: " << matches.size());
+
             for(int h = 0; h < min(des_image.rows-1,(int) matches.size()); h++)
             {
                 if((matches[h][0].distance < 0.8*(matches[h][1].distance)) && ((int) matches[h].size()<=2 && (int) matches[h].size()>0))
@@ -137,6 +136,8 @@ int main(int argc, char** argv )
                 }
             }
             
+
+            PAPER_DEBUG(" matches: " << matches.size());
             PAPER_DEBUG("good matches: " << good_matches.size());
             
             if (good_matches.size() >= 4)
@@ -171,7 +172,7 @@ int main(int argc, char** argv )
         imshow( "Good Matches", image );
         end = PaperUtil::getWallTime();
         ++counter;
-        PAPER_DEBUG("fps: "<< counter/ difftime(end,fps_start) <<std::endl);
+        PAPER_DEBUG("fps: " << counter/ difftime(end,fps_start) <<std::endl);
         t2=clock();
         
         PAPER_DEBUG("SURF/SURF -> RANSAC took " << (end - start) << " SECONDS");

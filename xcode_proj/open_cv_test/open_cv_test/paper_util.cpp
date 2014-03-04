@@ -8,6 +8,7 @@
 
 #include "opencv2/core/core.hpp"
 #include "opencv2/highgui/highgui.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/nonfree/nonfree.hpp"
 #include "opencv2/nonfree/features2d.hpp"
 
@@ -58,13 +59,19 @@ vector< Mat > PaperUtil::getMatFromDir(string dir)
 }
 vector< vector<KeyPoint> > PaperUtil::getKeyPointsFromTemplates(vector<Mat> templates){
     int minHessian = 500;
-    SurfFeatureDetector detector( minHessian );
-//    FastFeatureDetector detector;
+    //SurfFeatureDetector detector( minHessian );
+    FastFeatureDetector detector;
+
   
     vector< vector<KeyPoint> > key_points;
-    for(vector<Mat>::iterator it = templates.begin(); it != templates.end(); ++it) {
+    for(vector<int>::size_type i = 0; i != templates.size(); i++) {
+    //for(vector<Mat>::iterator it = templates.begin(); it != templates.end(); ++it) {
+        Mat eq_template;
+        
+        equalizeHist( templates[i], eq_template );
+        
         vector<KeyPoint> kp_object;
-        detector.detect( *it, kp_object );
+        detector.detect( eq_template, kp_object );
         key_points.push_back(kp_object);
         std::cout << kp_object.size() << endl;
     }
@@ -73,12 +80,14 @@ vector< vector<KeyPoint> > PaperUtil::getKeyPointsFromTemplates(vector<Mat> temp
 }
 
 vector< Mat > PaperUtil::getDescriptorsFromKP(vector<Mat> templates, vector< vector<KeyPoint> > key_points){
-    SurfDescriptorExtractor extractor;
-//    FREAK extractor(true, true, 22.0, 4, vector<int>());
+//    SurfDescriptorExtractor extractor;
+    FREAK extractor(true, true, 8.0, 4, vector<int>());
+
     vector< Mat > descriptor_objects;
     for(vector<int>::size_type i = 0; i != templates.size(); i++) {
-        Mat des_object;
-        extractor.compute( templates[i], key_points[i], des_object );
+        Mat des_object, eq_template;
+        equalizeHist( templates[i], eq_template );
+        extractor.compute( eq_template, key_points[i], des_object );
         descriptor_objects.push_back(des_object);
         std::cout << des_object.size() << endl;
     }
