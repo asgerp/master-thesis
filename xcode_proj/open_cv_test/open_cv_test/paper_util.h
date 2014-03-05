@@ -23,8 +23,11 @@ public:
     static void readme();
     static double getWallTime();
     static bool checkAnglesInVector(vector<Point2f> v);
+    static void foundMarker(vector<Point2f> marker_corners, vector< vector<Point2f> > found, size_t i);
+    static bool touchedMarker(vector< vector<Point2f> > found, Point2f pt);
 private:
     static double angle(Point2f pt1, Point2f pt2, Point2f pt0 );
+    
 };
 
 

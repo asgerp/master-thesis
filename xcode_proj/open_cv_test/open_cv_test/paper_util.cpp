@@ -59,9 +59,7 @@ vector< Mat > PaperUtil::getMatFromDir(string dir)
 }
 vector< vector<KeyPoint> > PaperUtil::getKeyPointsFromTemplates(vector<Mat> templates){
     int minHessian = 500;
-    //SurfFeatureDetector detector( minHessian );
-    FastFeatureDetector detector;
-
+    SurfFeatureDetector detector( minHessian );
   
     vector< vector<KeyPoint> > key_points;
     for(vector<int>::size_type i = 0; i != templates.size(); i++) {
@@ -135,6 +133,24 @@ double PaperUtil::angle( Point2f pt1, Point2f pt2, Point2f pt0 ) {
     double dx2 = pt2.x - pt0.x;
     double dy2 = pt2.y - pt0.y;
     return (dx1*dx2 + dy1*dy2)/sqrt((dx1*dx1 + dy1*dy1)*(dx2*dx2 + dy2*dy2) + 1e-10);
+}
+
+void PaperUtil::foundMarker(vector< Point2f > marker_corners, vector<vector< Point2f > > found, size_t i){
+    found.at(i) = (marker_corners);
+}
+
+
+// Goes through all found markers
+static bool touchedMarker(vector< vector<Point2f> > found, Point2f pt) {
+    double inside = -1;
+    for (int i = 0; i < found.size(); i++) {
+        inside = pointPolygonTest(found.at(i), pt, false);
+        break;
+    }
+    if(inside >= 0){
+        return true;
+    }
+    return false;
 }
 
 
