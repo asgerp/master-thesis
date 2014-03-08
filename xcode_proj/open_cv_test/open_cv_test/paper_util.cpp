@@ -46,6 +46,7 @@ vector< Mat > PaperUtil::getMatFromDir(string dir)
                     if(extension(*it) == ".jpg" || extension(*it) == ".png"){
                         string file_path = it->string();
                         files.push_back(imread(file_path, CV_LOAD_IMAGE_GRAYSCALE));
+                        std::cout << file_path << endl;
                     }
                     
                 }
@@ -57,19 +58,19 @@ vector< Mat > PaperUtil::getMatFromDir(string dir)
     }
     return files;
 }
-vector< vector<KeyPoint> > PaperUtil::getKeyPointsFromTemplates(vector<Mat> templates){
-    int minHessian = 500;
-    SurfFeatureDetector detector( minHessian );
+vector< vector<KeyPoint> > PaperUtil::getKeyPointsFromTemplates(vector<Mat> templates, int minHessian, int nOctaves, int nOctavesLayer){
+
+    SurfFeatureDetector detector( minHessian, nOctaves, nOctavesLayer );
   
     vector< vector<KeyPoint> > key_points;
     for(vector<int>::size_type i = 0; i != templates.size(); i++) {
     //for(vector<Mat>::iterator it = templates.begin(); it != templates.end(); ++it) {
         Mat eq_template;
         
-        equalizeHist( templates[i], eq_template );
+        //equalizeHist( templates[i], eq_template );
         
         vector<KeyPoint> kp_object;
-        detector.detect( eq_template, kp_object );
+        detector.detect( templates[i], kp_object );
         key_points.push_back(kp_object);
         std::cout << kp_object.size() << endl;
     }
@@ -78,14 +79,14 @@ vector< vector<KeyPoint> > PaperUtil::getKeyPointsFromTemplates(vector<Mat> temp
 }
 
 vector< Mat > PaperUtil::getDescriptorsFromKP(vector<Mat> templates, vector< vector<KeyPoint> > key_points){
-//    SurfDescriptorExtractor extractor;
-    FREAK extractor(true, true, 8.0, 4, vector<int>());
+    SurfDescriptorExtractor extractor;
+//    FREAK extractor(true, true, 8.0, 4, vector<int>());
 
     vector< Mat > descriptor_objects;
     for(vector<int>::size_type i = 0; i != templates.size(); i++) {
         Mat des_object, eq_template;
-        equalizeHist( templates[i], eq_template );
-        extractor.compute( eq_template, key_points[i], des_object );
+        //equalizeHist( templates[i], eq_template );
+        extractor.compute( templates[i], key_points[i], des_object );
         descriptor_objects.push_back(des_object);
         std::cout << des_object.size() << endl;
     }
@@ -141,7 +142,7 @@ void PaperUtil::foundMarker(vector< Point2f > marker_corners, vector<vector< Poi
 
 
 // Goes through all found markers
-static bool touchedMarker(vector< vector<Point2f> > found, Point2f pt) {
+bool PaperUtil::touchedMarker(vector< vector<Point2f> > found, Point2f pt) {
     double inside = -1;
     for (int i = 0; i < found.size(); i++) {
         inside = pointPolygonTest(found.at(i), pt, false);
