@@ -179,15 +179,10 @@ int main(int argc, char** argv )
 
     
     // fps calculation
-    double fps_start, start, end;
-    fps_start = PaperUtil::getWallTime();
+    int frames = 0;
+    double currentTime = 0, lastUpdateTime = 0, elapsedTime = 0;
     
-    clock_t t1,t2;
-    
-    int counter=0;
     char key = 'a';
-    int framecount = 0;
-    
 
     vector< vector<Point2f > > foundMarkers(templates.size());
     
@@ -220,10 +215,6 @@ int main(int argc, char** argv )
         image2 = eq_frame(rgbROI);
         resize(image2, image, Size(), 1.5, 1.5);
 
-        
-        t1=clock();
-        start = PaperUtil::getWallTime();
-        
         // descriptor image
         Mat des_image;
         vector<KeyPoint> kp_image;
@@ -336,12 +327,17 @@ int main(int argc, char** argv )
 		}
         imshow("depth", debug);
         imshow(windowName, image );
-        end = PaperUtil::getWallTime();
-        ++counter;
-        //PAPER_DEBUG("fps: " << counter/ difftime(end,fps_start) <<endl);
-        t2=clock();
         
-        //PAPER_DEBUG("SURF/SURF -> RANSAC took " << (end - start) << " SECONDS");
+        // output fps as last thing we do
+        frames++;
+        currentTime = getTickCount();
+        elapsedTime = ( currentTime - lastUpdateTime ) * 1000.0 / getTickFrequency();
+        
+        if ( elapsedTime >= 1000.0 ) {
+            PAPER_DEBUG("fps: " << ((frames * 1000.0) / elapsedTime) << std::endl);
+            frames = 0;
+            lastUpdateTime = currentTime;
+        }
         
         key = waitKey(1);
     }
