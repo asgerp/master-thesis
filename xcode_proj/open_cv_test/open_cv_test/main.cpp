@@ -105,9 +105,9 @@ int main(int argc, char** argv )
     
     // init detectors, extractors, and matchers
     FlannBasedMatcher matcher;
-    int minHessian = 100;
-    int nOctaves = 4;
-    int nOctavesLayers = 4;
+    int minHessian = 1000;
+    int nOctaves = 2;
+    int nOctavesLayers = 2;
     SurfFeatureDetector detector( minHessian , nOctaves, nOctavesLayers, true, false);
     SurfDescriptorExtractor extractor;
 
@@ -147,7 +147,15 @@ int main(int argc, char** argv )
     
 	Mat1s background(480, 640);
 	vector<Mat1s> buffer(nBackgroundTrain);
+    PAPER_DEBUG("before");
+    // init video capture
+    VideoCapture cap(0);
+    cap.set(CV_CAP_PROP_FRAME_WIDTH, 1280);
+    cap.set(CV_CAP_PROP_FRAME_HEIGHT, 960);
+    cap.set(CV_CAP_PROP_CONVERT_RGB , false);
     
+    PAPER_DEBUG("hrj");
+
     //init openNi from config
 	initOpenNI("niConfig.xml");
     
@@ -161,21 +169,15 @@ int main(int argc, char** argv )
 	createTrackbar("yMax", windowName, &yMax, 480);
 
     
-    // create background model (average depth)
+        // create background model (average depth)
     // save nBackgroundTrain frame in buffer and calculate average between them
 	for (unsigned int i=0; i<nBackgroundTrain; i++) {
 		xnContext.WaitAndUpdateAll();
 		depth.data = (uchar*) xnDepthGenerator.GetDepthMap();
 		buffer[i] = depth;
+        cerr << i << endl;
 	}
 	average(buffer, background);
-
-/*    // init video capture
-    VideoCapture cap(0);
-    cap.set(CV_CAP_PROP_FRAME_WIDTH, 320);
-    cap.set(CV_CAP_PROP_FRAME_HEIGHT, 240);
-    cap.set(CV_CAP_PROP_CONVERT_RGB , false);
-  */
 
     
     // fps calculation
@@ -197,10 +199,11 @@ int main(int argc, char** argv )
 		depth.data = (uchar*) xnDepthGenerator.GetDepthMap();
 		//xnImgeGenerator.GetGrayscale8ImageMap()
 		// update rgb image
-		rgb.data = (uchar*) xnImgeGenerator.GetRGB24ImageMap(); // segmentation fault here
+		//rgb.data = (uchar*) xnImgeGenerator.GetRGB24ImageMap(); // segmentation fault here
+        
         Mat frame, eq_frame, image, image2, rgb2;
-
-		cvtColor(rgb, eq_frame, CV_RGB2GRAY);
+        cap >> frame;
+		cvtColor(frame, image, CV_RGB2GRAY);
         
         
         //cap >> frame;
@@ -212,8 +215,8 @@ int main(int argc, char** argv )
         //cvtColor(frame, eq_frame, CV_RGB2GRAY);
 //        equalizeHist(eq_frame, rgb2);
         
-        image2 = eq_frame(rgbROI);
-        resize(image2, image, Size(), 1.5, 1.5);
+       // image = eq_frame(rgbROI);
+        //resize(image2, image, Size(), 1.5, 1.5);
 
         // descriptor image
         Mat des_image;
