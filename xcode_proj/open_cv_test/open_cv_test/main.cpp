@@ -309,9 +309,7 @@ int main(int argc, char** argv )
         });
         // dispatch block end
         
-        for (int g = 0; g<foundMarkers.size(); g++) {
-            cerr << foundMarkers.at(g) << endl;
-        }
+        
         // extract foreground by simple subtraction of very basic background model
 		foreground = background - depth;
 		// find touch mask by thresholding (points that are close to background = touch points)
@@ -332,6 +330,10 @@ int main(int argc, char** argv )
 				Scalar center = mean(contourMat);
 				Point2i touchPoint(center[0], center[1]);
 				touchPoints.push_back(touchPoint);
+                
+                for (int g = 0; g<foundMarkers.size(); g++) {
+                    cerr << pointPolygonTest(foundMarkers.at(g),touchPoint, true) << endl;
+                }
                 cerr << touchPoint.x << "," << touchPoint.y << endl;
 			}
 		}
