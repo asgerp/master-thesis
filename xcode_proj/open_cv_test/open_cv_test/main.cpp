@@ -116,8 +116,15 @@ int main(int argc, char** argv )
     vector< Mat > templates = PaperUtil::getMatFromDir(path);
     vector< vector< KeyPoint > > template_kp = PaperUtil::getKeyPointsFromTemplates(templates, minHessian, nOctaves, nOctavesLayers);
     vector< Mat > template_descriptors = PaperUtil::getDescriptorsFromKP(templates, template_kp);
+    
     for (int j = 0; j<templates.size(); j++) {
-        foundMarkers.push_back(Mat());
+        vector<Point2f> init_corners(4);
+        //Get the corners from the object
+        init_corners[0] = cvPoint( 0, 0 );
+        init_corners[1] = cvPoint( 0, 0 );
+        init_corners[2] = cvPoint( 0, 0 );
+        init_corners[3] = cvPoint( 0, 0 );
+        foundMarkers.push_back(Mat(init_corners));
     }
   	const char* windowName = "Debug";
     //================= INIT KINECT VARIABLES =============================//
@@ -328,7 +335,7 @@ int main(int argc, char** argv )
 			// find touch points by area thresholding
 			if ( contourArea(contourMat) > touchMinArea ) {
 				Scalar center = mean(contourMat);
-				Point2i touchPoint(center[0], center[1]);
+				Point2f touchPoint(center[0], center[1]);
 				touchPoints.push_back(touchPoint);
                 
                 for (int g = 0; g<foundMarkers.size(); g++) {
