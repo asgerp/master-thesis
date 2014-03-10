@@ -54,6 +54,7 @@ if (DEBUG) { cerr << "["<< __func__ << ":" << __LINE__ << "] " << x << endl; } \
 xn::Context xnContext;
 xn::DepthGenerator xnDepthGenerator;
 xn::ImageGenerator xnImgeGenerator;
+vector< Mat > foundMarkers;
 
 int initOpenNI(const XnChar* fname) {
 	XnStatus nRetVal = XN_STATUS_OK;
@@ -115,7 +116,9 @@ int main(int argc, char** argv )
     vector< Mat > templates = PaperUtil::getMatFromDir(path);
     vector< vector< KeyPoint > > template_kp = PaperUtil::getKeyPointsFromTemplates(templates, minHessian, nOctaves, nOctavesLayers);
     vector< Mat > template_descriptors = PaperUtil::getDescriptorsFromKP(templates, template_kp);
-
+    for (int j = 0; j<templates.size(); j++) {
+        foundMarkers.push_back(Mat());
+    }
   	const char* windowName = "Debug";
     //================= INIT KINECT VARIABLES =============================//
     //init touch distance constants
@@ -188,7 +191,7 @@ int main(int argc, char** argv )
     
     char key = 'a';
 
-    vector< vector<Point2f > > foundMarkers(templates.size());
+
     
     while (key != 27)
     {
@@ -292,29 +295,28 @@ int main(int argc, char** argv )
                 obj_corners[3] = cvPoint( 0, templates[i].rows );
                 perspectiveTransform( obj_corners, scene_corners, H);
                 
-                //Draw lines between the corners (the mapped object in the scene image )
+                // Draw lines between the corners (the mapped object in the scene image )
                 // count the number of markers found
                 // save the corners in a list
                 int area = fabs(contourArea(Mat(scene_corners)));
                 
                 if(PaperUtil::checkAnglesInVector(scene_corners) == true && area > 200){//&& isContourConvex(Mat(scene_corners)) && area > 5000){
                     PaperUtil::drawLine(image, scene_corners);
-                    //PAPER_DEBUG("FOUND " << area << " " << scene_corners[0] << " " << scene_corners[1] << " " << scene_corners[2] << " " << scene_corners[3]);
+                    foundMarkers.at(i) = Mat(scene_corners);
                 }
 
             }
         });
-        //} dispatch block end
+        // dispatch block end
         
+        for (int g = 0; g<foundMarkers.size(); g++) {
+            cerr << foundMarkers.at(g) << endl;
+        }
         // extract foreground by simple subtraction of very basic background model
-		
-        
-        foreground = background - depth;
-        
+		foreground = background - depth;
 		// find touch mask by thresholding (points that are close to background = touch points)
 		touch = (foreground > touchDepthMin) & (foreground < touchDepthMax);
     
-
 
 		// extract ROI(region of interest)
 		Rect roi(xMin, yMin, xMax - xMin, yMax - yMin);
