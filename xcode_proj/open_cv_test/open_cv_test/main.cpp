@@ -105,10 +105,10 @@ int main(int argc, char** argv )
     
     // init detectors, extractors, and matchers
     FlannBasedMatcher matcher;
-    int minHessian = 1000;
+    int minHessian = 300;
     int nOctaves = 2;
-    int nOctavesLayers = 2;
-    SurfFeatureDetector detector( minHessian , nOctaves, nOctavesLayers, true, false);
+    int nOctavesLayers = 4;
+    SurfFeatureDetector detector( minHessian , nOctaves, nOctavesLayers, true, true);
     SurfDescriptorExtractor extractor;
 
     // init templates. calculate key points and descriptors for templates/markers
@@ -171,13 +171,15 @@ int main(int argc, char** argv )
     
         // create background model (average depth)
     // save nBackgroundTrain frame in buffer and calculate average between them
-	for (unsigned int i=0; i<nBackgroundTrain; i++) {
+	
+    for (unsigned int i=0; i<nBackgroundTrain; i++) {
 		xnContext.WaitAndUpdateAll();
 		depth.data = (uchar*) xnDepthGenerator.GetDepthMap();
 		buffer[i] = depth;
         cerr << i << endl;
 	}
 	average(buffer, background);
+    
 
     
     // fps calculation
@@ -193,17 +195,26 @@ int main(int argc, char** argv )
         Rect rgbROI(xMin, yMin, xMax - xMin, yMax - yMin);
         // read available data
         // reads data from all nodes, eg. cameras(depth and rgb)
-		xnContext.WaitAndUpdateAll();
+		
+        xnContext.WaitAndUpdateAll();
         
         // update 16 bit depth matrix
-		depth.data = (uchar*) xnDepthGenerator.GetDepthMap();
-		//xnImgeGenerator.GetGrayscale8ImageMap()
+		
+        depth.data = (uchar*) xnDepthGenerator.GetDepthMap();
+		
+        //xnImgeGenerator.GetGrayscale8ImageMap()
 		// update rgb image
 		//rgb.data = (uchar*) xnImgeGenerator.GetRGB24ImageMap(); // segmentation fault here
         
         Mat frame, eq_frame, image, image2, rgb2;
         cap >> frame;
-		cvtColor(frame, image, CV_RGB2GRAY);
+		
+        // crop
+        Mat cropImage;
+        Rect cropROI(300,0,640,960);
+        cropImage = frame(cropROI);
+        
+        cvtColor(cropImage, image, CV_RGB2GRAY);
         
         
         //cap >> frame;
@@ -217,6 +228,7 @@ int main(int argc, char** argv )
         
        // image = eq_frame(rgbROI);
         //resize(image2, image, Size(), 1.5, 1.5);
+        
 
         // descriptor image
         Mat des_image;
@@ -287,7 +299,7 @@ int main(int argc, char** argv )
                 
                 if(PaperUtil::checkAnglesInVector(scene_corners) == true && area > 200){//&& isContourConvex(Mat(scene_corners)) && area > 5000){
                     PaperUtil::drawLine(image, scene_corners);
-                    PAPER_DEBUG("FOUND " << area << " " << scene_corners[0] << " " << scene_corners[1] << " " << scene_corners[2] << " " << scene_corners[3]);
+                    //PAPER_DEBUG("FOUND " << area << " " << scene_corners[0] << " " << scene_corners[1] << " " << scene_corners[2] << " " << scene_corners[3]);
                 }
 
             }
@@ -295,10 +307,13 @@ int main(int argc, char** argv )
         //} dispatch block end
         
         // extract foreground by simple subtraction of very basic background model
-		foreground = background - depth;
+		
+        
+        foreground = background - depth;
         
 		// find touch mask by thresholding (points that are close to background = touch points)
 		touch = (foreground > touchDepthMin) & (foreground < touchDepthMax);
+    
 
 
 		// extract ROI(region of interest)
