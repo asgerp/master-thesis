@@ -17,6 +17,7 @@ using namespace std;
 #include <dispatch/dispatch.h>
 
 //opencv
+
 #include "opencv2/core/core.hpp"
 #include "opencv2/features2d/features2d.hpp"
 #include "opencv2/highgui/highgui.hpp"
@@ -25,6 +26,10 @@ using namespace std;
 #include "opencv2/nonfree/nonfree.hpp"
 #include "opencv2/nonfree/features2d.hpp"
 
+// gpu
+#include "opencv2/ocl/ocl.hpp"
+#include "opencv2/nonfree/ocl.hpp"
+using namespace cv::ocl;
 
 //openni
 #include "ni/XnOpenNI.h"
@@ -111,12 +116,35 @@ int main(int argc, char** argv )
     int nOctavesLayers = 4;
     SurfFeatureDetector detector( minHessian , nOctaves, nOctavesLayers, true, true);
     SurfDescriptorExtractor extractor;
-
+    
+    // gpu surf + bruteforce matcher
+    //SURF_GPU gpuSURF = SURF_GPU(minHessian,nOctaves, nOctavesLayers, true, true);
+    //BruteForceMatcher_GPU<L2 <float> > gpuBruteForceMatcher;
+    
     // init templates. calculate key points and descriptors for templates/markers
     MarkerInfo markerInfo = PaperUtil::getMatFromDir(path);
     vector<Mat> templates = markerInfo.imageData;
     vector< vector< KeyPoint > > template_kp = PaperUtil::getKeyPointsFromTemplates(templates, minHessian, nOctaves, nOctavesLayers);
     vector< Mat > template_descriptors = PaperUtil::getDescriptorsFromKP(templates, template_kp);
+    
+
+    
+    // gpu surf, upload templates, create keypoint and descriptor gpumats
+    
+    /*
+    vector< GpuMat > gpuTemplates, gpuTemplateKeypoints, gpuTemplateDescriptors;
+    for (int i = 0; i < templates.size(); i++) {
+        GpuMat gpuTemplate, gpuTemplKeyp, gpuTemplDesc;
+        gpuTemplate.upload(templates[i]);
+        gpuTemplates.push_back(gpuTemplate);
+        gpuTemplateKeypoints.push_back(gpuTemplKeyp);
+        gpuTemplateDescriptors.push_back(gpuTemplDesc);
+    }
+    // gpu surf, detect keypoints and extract descriptors
+    for (int i = 0; i < gpuTemplates.size(); i++) {
+        gpuSURF(gpuTemplates[i],GpuMat(),gpuTemplateKeypoints[i],gpuTemplateDescriptors[i]);
+    }
+    */
     
     // init foundmarkers with empty data
     for (int j = 0; j<templates.size(); j++) {
@@ -128,6 +156,7 @@ int main(int argc, char** argv )
         init_corners[3] = cvPoint( 0, 0 );
         foundMarkers.push_back(Mat(init_corners));
     }
+    
   	const char* windowName = "Debug";
     //================= INIT KINECT VARIABLES =============================//
     //init touch distance constants
@@ -223,13 +252,25 @@ int main(int argc, char** argv )
         
         cvtColor(cropImage, image, CV_RGB2GRAY);
 
+        
+       // image = eq_frame(rgbROI);
+        //resize(image2, image, Size(), 1.5, 1.5);
+
         // descriptor and keypoint from image
         Mat des_image;
         vector<KeyPoint> kp_image;
         
         detector.detect( image, kp_image );
         extractor.compute( image, kp_image, des_image );
-
+        
+        // gpu code
+        /*
+        GpuMat gpuImage = GpuMat();
+        GpuMat gpuImageKeypoints = GpuMat();
+        GpuMat gpuImageDescriptors = GpuMat();
+        gpuImage.upload(image);
+        gpuSURF(gpuImage,GpuMat(),gpuImageKeypoints,gpuImageDescriptors);
+*/
         // get dispatch queue
         dispatch_queue_t aQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
 
@@ -253,6 +294,11 @@ int main(int argc, char** argv )
             vector<Point2f> scene_corners(4);
             Mat H;
             matcher.knnMatch(template_descriptors[i], des_image, matches, 2);
+            //matcher.knnMatch(des_image, template_descriptors[i], matches,2);
+            
+            // gpu matching
+            //BruteForceMatcher_GPU_base::knnMatch(<#const cv::gpu::GpuMat &query#>, <#const cv::gpu::GpuMat &train#>, <#std::vector<std::vector<DMatch> > &matches#>, <#int k#>)
+
 
             for(int h = 0; h < min(des_image.rows-1,(int) matches.size()); h++) {
                 if((matches[h][0].distance < 0.8*(matches[h][1].distance)) && ((int) matches[h].size()<=2 && (int) matches[h].size()>0)) {
