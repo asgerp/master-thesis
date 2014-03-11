@@ -59,7 +59,7 @@ if (DEBUG) { cerr << "["<< __func__ << ":" << __LINE__ << "] " << x << endl; } \
 xn::Context xnContext;
 xn::DepthGenerator xnDepthGenerator;
 xn::ImageGenerator xnImgeGenerator;
-vector< Mat > foundMarkers;
+vector< vector< Point2f > > foundMarkers;
 
 int initOpenNI(const XnChar* fname) {
 	XnStatus nRetVal = XN_STATUS_OK;
@@ -154,7 +154,7 @@ int main(int argc, char** argv )
         init_corners[1] = cvPoint( 0, 0 );
         init_corners[2] = cvPoint( 0, 0 );
         init_corners[3] = cvPoint( 0, 0 );
-        foundMarkers.push_back(Mat(init_corners));
+        foundMarkers.push_back(init_corners);
     }
     
   	const char* windowName = "Debug";
@@ -328,15 +328,19 @@ int main(int argc, char** argv )
                 // save the corners in a list if we think they are templates
                 int area = fabs(contourArea(Mat(scene_corners)));
                 
-                if(PaperUtil::checkAnglesInVector(scene_corners) == true && area > 200){//&& isContourConvex(Mat(scene_corners)) && area > 5000){
+                if(PaperUtil::checkAnglesInVector(scene_corners) == true && isContourConvex(Mat(scene_corners)) && area > 5000){
                     PaperUtil::drawLine(image, scene_corners);
-                    foundMarkers.at(i) = Mat(scene_corners);
+                    foundMarkers.at(i) = scene_corners;
                 }
 
             }
         });// dispatch block end
         
-        
+        /*
+        for (int h = 0 ; h< markerInfo.fNames.size(); h++) {
+            cerr << foundMarkers.at(h) << ": " << markerInfo.fNames.at(h) << endl;
+        }
+        */
         
         // extract foreground by simple subtraction of very basic background model
 		foreground = background - depth;
@@ -351,8 +355,9 @@ int main(int argc, char** argv )
 		vector< vector<Point2i> > contours;
 		vector<Point2f> touchPoints;
 		findContours(touchRoi, contours, CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE, Point2i(xMin, yMin));
-		for (unsigned int i=0; i<contours.size(); i++) {
-			Mat contourMat(contours[i]);
+		
+        for (unsigned int i=0; i<contours.size(); i++) {
+            Mat contourMat(contours[i]);
 			// find touch points by area thresholding
 			if ( contourArea(contourMat) > touchMinArea ) {
 				Scalar center = mean(contourMat);
@@ -361,15 +366,16 @@ int main(int argc, char** argv )
                 
                 for (int g = 0; g<foundMarkers.size(); g++) {
                     double foundIt = pointPolygonTest(foundMarkers.at(g),touchPoint, false);
-                    PAPER_DEBUG(foundIt);
+                    //PAPER_DEBUG(foundIt);
+                    //cout << foundIt << endl;
                     if(foundIt > 0){
-                        PAPER_DEBUG(markerInfo.fNames.at(g));
+                        //PAPER_DEBUG(markerInfo.fNames.at(g));
+                        cout << markerInfo.fNames.at(g) << endl;
                     }
                 }
                 cerr << touchPoint.x << "," << touchPoint.y << endl;
 			}
 		}
-        
         // comment out when going live
 		// draw debug frame
 		depth.convertTo(depth8, CV_8U, 255 / debugFrameMaxDepth); // render depth to debug frame
@@ -388,7 +394,8 @@ int main(int argc, char** argv )
         elapsedTime = ( currentTime - lastUpdateTime ) * 1000.0 / getTickFrequency();
         
         if ( elapsedTime >= 1000.0 ) {
-            PAPER_DEBUG("fps: " << ((frames * 1000.0) / elapsedTime) << std::endl);
+            //PAPER_DEBUG("fps: " << ((frames * 1000.0) / elapsedTime) << std::endl);
+            cout << "fps: " << ((frames * 1000.0) / elapsedTime) << std::endl;
             frames = 0;
             lastUpdateTime = currentTime;
         }
