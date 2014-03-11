@@ -20,8 +20,8 @@ using namespace boost::filesystem;
 //vector< Mat > getMatFromDir(string dir);
 //int detect(Mat obj, Mat scene);
 
-const double NND_RATIO = 0.7;
-const double PATTERN_SCALE = 22.0;
+//const double NND_RATIO = 0.7;
+//const double PATTERN_SCALE = 22.0;
 
 
 /** @function main */
