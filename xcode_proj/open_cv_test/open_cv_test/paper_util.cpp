@@ -26,9 +26,11 @@ using namespace cv;
 using namespace boost::filesystem;
 
 /** @function getMatFromDir */
-vector< Mat > PaperUtil::getMatFromDir(string dir)
+MarkerInfo PaperUtil::getMatFromDir(string dir)
 {
     vector< Mat > files;
+    vector< string > fNames;
+    MarkerInfo mi;
     try {
         if (exists(dir)){
             if (is_directory(dir)) {
@@ -46,7 +48,7 @@ vector< Mat > PaperUtil::getMatFromDir(string dir)
                     if(extension(*it) == ".jpg" || extension(*it) == ".png"){
                         string file_path = it->string();
                         files.push_back(imread(file_path, CV_LOAD_IMAGE_GRAYSCALE));
-                        std::cout << file_path << endl;
+                        fNames.push_back(file_path);
                     }
                     
                 }
@@ -56,7 +58,9 @@ vector< Mat > PaperUtil::getMatFromDir(string dir)
     } catch (const filesystem_error& ex) {
         cout << ex.what() << '\n';
     }
-    return files;
+    mi.imageData = files;
+    mi.fNames = fNames;
+    return mi;
 }
 vector< vector<KeyPoint> > PaperUtil::getKeyPointsFromTemplates(vector<Mat> templates, int minHessian, int nOctaves, int nOctavesLayer){
 

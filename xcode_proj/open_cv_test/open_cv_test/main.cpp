@@ -113,7 +113,8 @@ int main(int argc, char** argv )
     SurfDescriptorExtractor extractor;
 
     // init templates. calculate key points and descriptors for templates/markers
-    vector< Mat > templates = PaperUtil::getMatFromDir(path);
+    MarkerInfo markerInfo = PaperUtil::getMatFromDir(path);
+    vector<Mat> templates = markerInfo.imageData;
     vector< vector< KeyPoint > > template_kp = PaperUtil::getKeyPointsFromTemplates(templates, minHessian, nOctaves, nOctavesLayers);
     vector< Mat > template_descriptors = PaperUtil::getDescriptorsFromKP(templates, template_kp);
     
@@ -340,6 +341,7 @@ int main(int argc, char** argv )
                 
                 for (int g = 0; g<foundMarkers.size(); g++) {
                     cerr << pointPolygonTest(foundMarkers.at(g),touchPoint, true) << endl;
+                    cerr << markerInfo.fNames.at(g) << endl;
                 }
                 cerr << touchPoint.x << "," << touchPoint.y << endl;
 			}

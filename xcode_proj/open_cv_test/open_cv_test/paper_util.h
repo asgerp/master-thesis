@@ -14,9 +14,14 @@
 using namespace std;
 using namespace cv;
 
+struct MarkerInfo {
+    vector<Mat> imageData;
+    vector<string> fNames;
+};
+
 class PaperUtil {
 public:
-    static vector< Mat > getMatFromDir(string dir);
+    static MarkerInfo getMatFromDir(string dir);
     static vector< vector<KeyPoint> >getKeyPointsFromTemplates(vector< Mat >, int minHessian, int nOctaves, int nOctavesLayers);
     static vector< Mat > getDescriptorsFromKP(vector<Mat>, vector< vector<KeyPoint> >);
     static void drawLine(Mat img, vector<Point2f> corners);
