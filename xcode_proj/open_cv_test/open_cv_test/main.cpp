@@ -118,6 +118,7 @@ int main(int argc, char** argv )
     vector< vector< KeyPoint > > template_kp = PaperUtil::getKeyPointsFromTemplates(templates, minHessian, nOctaves, nOctavesLayers);
     vector< Mat > template_descriptors = PaperUtil::getDescriptorsFromKP(templates, template_kp);
     
+    // init foundmarkers with empty data
     for (int j = 0; j<templates.size(); j++) {
         vector<Point2f> init_corners(4);
         //Get the corners from the object
@@ -158,6 +159,7 @@ int main(int argc, char** argv )
     
 	Mat1s background(480, 640);
 	vector<Mat1s> buffer(nBackgroundTrain);
+    //================= INIT KINECT VARIABLES END =============================//
     PAPER_DEBUG("before");
     // init video capture
     VideoCapture cap(0);
@@ -180,9 +182,8 @@ int main(int argc, char** argv )
 	createTrackbar("yMax", windowName, &yMax, 480);
 
     
-        // create background model (average depth)
+    // create background model (average depth)
     // save nBackgroundTrain frame in buffer and calculate average between them
-	
     for (unsigned int i=0; i<nBackgroundTrain; i++) {
 		xnContext.WaitAndUpdateAll();
 		depth.data = (uchar*) xnDepthGenerator.GetDepthMap();
@@ -191,32 +192,27 @@ int main(int argc, char** argv )
 	}
 	average(buffer, background);
     
-
-    
     // fps calculation
     int frames = 0;
     double currentTime = 0, lastUpdateTime = 0, elapsedTime = 0;
-    
     char key = 'a';
-
 
     
     while (key != 27)
     {
         Rect rgbROI(xMin, yMin, xMax - xMin, yMax - yMin);
-        // read available data
+
         // reads data from all nodes, eg. cameras(depth and rgb)
-		
         xnContext.WaitAndUpdateAll();
         
         // update 16 bit depth matrix
-		
         depth.data = (uchar*) xnDepthGenerator.GetDepthMap();
 		
         //xnImgeGenerator.GetGrayscale8ImageMap()
 		// update rgb image
 		//rgb.data = (uchar*) xnImgeGenerator.GetRGB24ImageMap(); // segmentation fault here
         
+        // init frames used this iteration
         Mat frame, eq_frame, image, image2, rgb2;
         cap >> frame;
 		
@@ -226,22 +222,8 @@ int main(int argc, char** argv )
         cropImage = frame(cropROI);
         
         cvtColor(cropImage, image, CV_RGB2GRAY);
-        
-        
-        //cap >> frame;
-        //if background - frame < thresshold && we found all markers we are looking for
-        // we only need to detect touches until the scene changes.
-        
-        
-        // get frames from capture
-        //cvtColor(frame, eq_frame, CV_RGB2GRAY);
-//        equalizeHist(eq_frame, rgb2);
-        
-       // image = eq_frame(rgbROI);
-        //resize(image2, image, Size(), 1.5, 1.5);
-        
 
-        // descriptor image
+        // descriptor and keypoint from image
         Mat des_image;
         vector<KeyPoint> kp_image;
         
@@ -271,23 +253,16 @@ int main(int argc, char** argv )
             vector<Point2f> scene_corners(4);
             Mat H;
             matcher.knnMatch(template_descriptors[i], des_image, matches, 2);
-//            matcher.knnMatch(des_image, template_descriptors[i], matches,2);
 
-
-            for(int h = 0; h < min(des_image.rows-1,(int) matches.size()); h++)
-            {
-                if((matches[h][0].distance < 0.8*(matches[h][1].distance)) && ((int) matches[h].size()<=2 && (int) matches[h].size()>0))
-                {
+            for(int h = 0; h < min(des_image.rows-1,(int) matches.size()); h++) {
+                if((matches[h][0].distance < 0.8*(matches[h][1].distance)) && ((int) matches[h].size()<=2 && (int) matches[h].size()>0)) {
                     good_matches.push_back(matches[h][0]);
                 }
             }
-//            PAPER_DEBUG(" matches: " << matches.size());
-//            PAPER_DEBUG("good matches: " << good_matches.size());
+
             
-            if (good_matches.size() >= 4)
-            {
-                for( int j = 0; j < good_matches.size(); j++ )
-                {
+            if (good_matches.size() >= 4) {
+                for( int j = 0; j < good_matches.size(); j++ ) {
                     //Get the keypoints from the good matches
                     obj.push_back( template_kp[i][ good_matches[j].queryIdx ].pt );
                     scene.push_back( kp_image[ good_matches[j].trainIdx ].pt );
@@ -304,8 +279,7 @@ int main(int argc, char** argv )
                 perspectiveTransform( obj_corners, scene_corners, H);
                 
                 // Draw lines between the corners (the mapped object in the scene image )
-                // count the number of markers found
-                // save the corners in a list
+                // save the corners in a list if we think they are templates
                 int area = fabs(contourArea(Mat(scene_corners)));
                 
                 if(PaperUtil::checkAnglesInVector(scene_corners) == true && area > 200){//&& isContourConvex(Mat(scene_corners)) && area > 5000){
@@ -314,8 +288,8 @@ int main(int argc, char** argv )
                 }
 
             }
-        });
-        // dispatch block end
+        });// dispatch block end
+        
         
         
         // extract foreground by simple subtraction of very basic background model
@@ -340,8 +314,11 @@ int main(int argc, char** argv )
 				touchPoints.push_back(touchPoint);
                 
                 for (int g = 0; g<foundMarkers.size(); g++) {
-                    cerr << pointPolygonTest(foundMarkers.at(g),touchPoint, true) << endl;
-                    cerr << markerInfo.fNames.at(g) << endl;
+                    double foundIt = pointPolygonTest(foundMarkers.at(g),touchPoint, false);
+                    PAPER_DEBUG(foundIt);
+                    if(foundIt > 0){
+                        PAPER_DEBUG(markerInfo.fNames.at(g));
+                    }
                 }
                 cerr << touchPoint.x << "," << touchPoint.y << endl;
 			}
