@@ -65,7 +65,7 @@ MarkerInfo PaperUtil::getMatFromDir(string dir)
 vector< vector<KeyPoint> > PaperUtil::getKeyPointsFromTemplates(vector<Mat> templates, int minHessian, int nOctaves, int nOctavesLayer){
 
     SurfFeatureDetector detector( minHessian, nOctaves, nOctavesLayer );
-  
+    
     vector< vector<KeyPoint> > key_points;
     for(vector<int>::size_type i = 0; i != templates.size(); i++) {
     //for(vector<Mat>::iterator it = templates.begin(); it != templates.end(); ++it) {

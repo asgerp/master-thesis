@@ -76,6 +76,13 @@ int initOpenNI(const XnChar* fname) {
 	nRetVal = xnContext.FindExistingNode(XN_NODE_TYPE_IMAGE, xnImgeGenerator);
 	CHECK_RC(nRetVal, "FindExistingNode(XN_NODE_TYPE_IMAGE)");
     
+    XnBool isSupported = xnDepthGenerator.IsCapabilitySupported("AlternativeViewPoint");
+    if(TRUE == isSupported) {
+        XnStatus res = xnDepthGenerator.GetAlternativeViewPointCap().SetViewPoint(xnImgeGenerator);
+        if(XN_STATUS_OK != res) {
+            printf("Getting and setting AlternativeViewPoint failed: %s\n", xnGetStatusString(res));
+        }
+    }
 	return 0;
 }
 
@@ -110,16 +117,24 @@ int main(int argc, char** argv )
     }
     
     // init detectors, extractors, and matchers
-    FlannBasedMatcher matcher;
+    //FlannBasedMatcher matcher;
     int minHessian = 300;
-    int nOctaves = 2;
+    int nOctaves = 4;
     int nOctavesLayers = 4;
-    SurfFeatureDetector detector( minHessian , nOctaves, nOctavesLayers, true, true);
-    SurfDescriptorExtractor extractor;
+    //SurfFeatureDetector detector( minHessian , nOctaves, nOctavesLayers, true, true);
+    //SurfDescriptorExtractor extractor;
     
-    // gpu surf + bruteforce matcher
-    //SURF_GPU gpuSURF = SURF_GPU(minHessian,nOctaves, nOctavesLayers, true, true);
-    //BruteForceMatcher_GPU<L2 <float> > gpuBruteForceMatcher;
+    // OCL SURF + GPU init
+    SURF_OCL oclSURF = SURF_OCL(minHessian,nOctaves,nOctavesLayers,true,0.01f,true);
+    ocl::DevicesInfo devices;
+    ocl::getOpenCLDevices(devices);
+    ocl::setDevice(devices[1]); // 0 = on-die gpu, 1 = peripheral gpu
+    
+    std::cout
+    << "Device name: "
+    << cv::ocl::Context::getContext()->getDeviceInfo().deviceName
+    << std::endl;
+    
     
     // init templates. calculate key points and descriptors for templates/markers
     MarkerInfo markerInfo = PaperUtil::getMatFromDir(path);
@@ -127,25 +142,30 @@ int main(int argc, char** argv )
     vector< vector< KeyPoint > > template_kp = PaperUtil::getKeyPointsFromTemplates(templates, minHessian, nOctaves, nOctavesLayers);
     vector< Mat > template_descriptors = PaperUtil::getDescriptorsFromKP(templates, template_kp);
     
-
-    
-    // gpu surf, upload templates, create keypoint and descriptor gpumats
-    
-    /*
-    vector< GpuMat > gpuTemplates, gpuTemplateKeypoints, gpuTemplateDescriptors;
+    // OCL SURF, upload templates, create keypoint and descriptor oclMats
+    vector< oclMat > oclTemplates, oclTemplateKeypoints, oclTemplateDescriptors;
     for (int i = 0; i < templates.size(); i++) {
-        GpuMat gpuTemplate, gpuTemplKeyp, gpuTemplDesc;
-        gpuTemplate.upload(templates[i]);
-        gpuTemplates.push_back(gpuTemplate);
-        gpuTemplateKeypoints.push_back(gpuTemplKeyp);
-        gpuTemplateDescriptors.push_back(gpuTemplDesc);
+        oclMat oclTemplate, oclTemplKeyp, oclTemplDesc;
+        oclTemplate.upload(templates[i]);
+        oclTemplates.push_back(oclTemplate);
+        oclTemplateKeypoints.push_back(oclTemplKeyp);
+        oclTemplateDescriptors.push_back(oclTemplDesc);
     }
-    // gpu surf, detect keypoints and extract descriptors
-    for (int i = 0; i < gpuTemplates.size(); i++) {
-        gpuSURF(gpuTemplates[i],GpuMat(),gpuTemplateKeypoints[i],gpuTemplateDescriptors[i]);
-    }
-    */
     
+    // OCL SURF, detect keypoints and extract descriptors
+    for (int i = 0; i < oclTemplates.size(); i++) {
+        oclSURF(oclTemplates[i],oclMat(),oclTemplateKeypoints[i],oclTemplateDescriptors[i]);
+    }
+
+    // Download template keypoints
+    vector< vector< KeyPoint > > dlTemplKeypoints;
+    vector< Mat > dlTemplDescriptors;
+    for (int i = 0; i < oclTemplates.size(); i++) {
+        vector< KeyPoint > dlTemplKp;
+        oclSURF.downloadKeypoints(oclTemplateKeypoints[i], dlTemplKp);
+        dlTemplKeypoints.push_back(dlTemplKp);
+    }
+
     // init foundmarkers with empty data
     for (int j = 0; j<templates.size(); j++) {
         vector<Point2f> init_corners(4);
@@ -189,18 +209,13 @@ int main(int argc, char** argv )
 	Mat1s background(480, 640);
 	vector<Mat1s> buffer(nBackgroundTrain);
     //================= INIT KINECT VARIABLES END =============================//
-    PAPER_DEBUG("before");
     // init video capture
     VideoCapture cap(0);
     cap.set(CV_CAP_PROP_FRAME_WIDTH, 1280);
     cap.set(CV_CAP_PROP_FRAME_HEIGHT, 960);
     cap.set(CV_CAP_PROP_CONVERT_RGB , false);
-    
-    PAPER_DEBUG("hrj");
-
     //init openNi from config
 	initOpenNI("niConfig.xml");
-    
     
     namedWindow(windowName);
     // delete this stuf we dont need it
@@ -210,14 +225,12 @@ int main(int argc, char** argv )
 	createTrackbar("yMin", windowName, &yMin, 480);
 	createTrackbar("yMax", windowName, &yMax, 480);
 
-    
     // create background model (average depth)
     // save nBackgroundTrain frame in buffer and calculate average between them
     for (unsigned int i=0; i<nBackgroundTrain; i++) {
 		xnContext.WaitAndUpdateAll();
 		depth.data = (uchar*) xnDepthGenerator.GetDepthMap();
 		buffer[i] = depth;
-        cerr << i << endl;
 	}
 	average(buffer, background);
     
@@ -225,7 +238,6 @@ int main(int argc, char** argv )
     int frames = 0;
     double currentTime = 0, lastUpdateTime = 0, elapsedTime = 0;
     char key = 'a';
-
     
     while (key != 27)
     {
@@ -242,35 +254,41 @@ int main(int argc, char** argv )
 		//rgb.data = (uchar*) xnImgeGenerator.GetRGB24ImageMap(); // segmentation fault here
         
         // init frames used this iteration
-        Mat frame, eq_frame, image, image2, rgb2;
+        Mat frame, eq_frame, image, greyImage, rgb2;
         cap >> frame;
 		
         // crop
-        Mat cropImage;
-        Rect cropROI(300,0,640,960);
-        cropImage = frame(cropROI);
+        int x = 320, y = 0, width = 640, height = 960;
+        Rect cropROI(x, y, width, height);
+        Mat cropImage = frame(cropROI);
+        cvtColor(cropImage, greyImage, CV_RGB2GRAY);
         
-        cvtColor(cropImage, image, CV_RGB2GRAY);
-
-        
-       // image = eq_frame(rgbROI);
-        //resize(image2, image, Size(), 1.5, 1.5);
-
+        // deep copy needed or OCL uploads ROI+rest of parent image mat
+        greyImage.copyTo(image, Mat());
+    
         // descriptor and keypoint from image
         Mat des_image;
         vector<KeyPoint> kp_image;
+        vector<KeyPoint> imageKp;
         
-        detector.detect( image, kp_image );
-        extractor.compute( image, kp_image, des_image );
+        //detector.detect( image, kp_image );
+        //extractor.compute( image, kp_image, des_image );
         
-        // gpu code
-        /*
-        GpuMat gpuImage = GpuMat();
-        GpuMat gpuImageKeypoints = GpuMat();
-        GpuMat gpuImageDescriptors = GpuMat();
-        gpuImage.upload(image);
-        gpuSURF(gpuImage,GpuMat(),gpuImageKeypoints,gpuImageDescriptors);
-*/
+        // ocl code ( move out of while to preallocate )
+        oclMat oclImage = oclMat(width,height,CV_8U); // move this to preallocate ?
+        oclMat oclImageKeypoints = oclMat();
+        oclMat oclImageDescriptors = oclMat();
+        
+        // ocl upload image to gpu mem and get image keypoints + descriptors
+        oclImage.upload(image);
+        oclSURF(oclImage,oclMat(),oclImageKeypoints,oclImageDescriptors);
+        
+        // download results from gpu
+        vector<KeyPoint> dlImageKp;
+        vector<float> dlImageDesc;
+        oclSURF.downloadKeypoints(oclImageKeypoints, dlImageKp);
+        oclSURF.downloadDescriptors(oclImageDescriptors, dlImageDesc);
+        
         // get dispatch queue
         dispatch_queue_t aQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
 
@@ -293,28 +311,36 @@ int main(int argc, char** argv )
             vector<Point2f> scene;
             vector<Point2f> scene_corners(4);
             Mat H;
-            matcher.knnMatch(template_descriptors[i], des_image, matches, 2);
+            
+            //matcher.knnMatch(dlTemplDescriptors[i],des_image,matches, 2);
             //matcher.knnMatch(des_image, template_descriptors[i], matches,2);
             
-            // gpu matching
-            //BruteForceMatcher_GPU_base::knnMatch(<#const cv::gpu::GpuMat &query#>, <#const cv::gpu::GpuMat &train#>, <#std::vector<std::vector<DMatch> > &matches#>, <#int k#>)
-
-
-            for(int h = 0; h < min(des_image.rows-1,(int) matches.size()); h++) {
-                if((matches[h][0].distance < 0.8*(matches[h][1].distance)) && ((int) matches[h].size()<=2 && (int) matches[h].size()>0)) {
+            
+            // ocl matching
+            BruteForceMatcher_OCL< ocl::L2<float> > oclBFMatcher; // can't move this out of dispatch for some reason (?)
+            oclBFMatcher.knnMatch(oclTemplateDescriptors[i], oclImageDescriptors, matches, 2); // k < 2 bugged
+            
+            //for(int h = 0; h < min(des_image.rows-1,(int) matches.size()); h++) {
+            for(int h = 0; h < (dlImageDesc.size(),(int) matches.size()); h++) {
+                if((matches[h][0].distance < 0.85*(matches[h][1].distance)) && ((int) matches[h].size()<=2 && (int) matches[h].size()>0)) {
                     good_matches.push_back(matches[h][0]);
                 }
             }
 
-            
             if (good_matches.size() >= 4) {
+                /*
                 for( int j = 0; j < good_matches.size(); j++ ) {
                     //Get the keypoints from the good matches
                     obj.push_back( template_kp[i][ good_matches[j].queryIdx ].pt );
                     scene.push_back( kp_image[ good_matches[j].trainIdx ].pt );
                 }
-                
-                H = findHomography( obj, scene, CV_RANSAC );
+                */
+                for( int j = 0; j < good_matches.size(); j++ ) {
+                    //Get the keypoints from the good matches
+                    obj.push_back( dlTemplKeypoints[i][ good_matches[j].queryIdx ].pt );
+                    scene.push_back( dlImageKp[ good_matches[j].trainIdx ].pt );
+                }
+                H = findHomography( obj, scene, CV_RANSAC , 10.0 );
                 vector<Point2f> obj_corners(4);
                 
                 //Get the corners from the object
@@ -328,7 +354,7 @@ int main(int argc, char** argv )
                 // save the corners in a list if we think they are templates
                 int area = fabs(contourArea(Mat(scene_corners)));
                 
-                if(PaperUtil::checkAnglesInVector(scene_corners) == true && isContourConvex(Mat(scene_corners)) && area > 5000){
+                if(PaperUtil::checkAnglesInVector(scene_corners) == true && isContourConvex(Mat(scene_corners)) && 50000 > area && area > 5000){
                     PaperUtil::drawLine(image, scene_corners);
                     foundMarkers.at(i) = scene_corners;
                 }
