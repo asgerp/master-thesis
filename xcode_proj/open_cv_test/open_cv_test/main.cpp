@@ -17,7 +17,6 @@ using namespace std;
 #include <dispatch/dispatch.h>
 
 //opencv
-
 #include "opencv2/core/core.hpp"
 #include "opencv2/features2d/features2d.hpp"
 #include "opencv2/highgui/highgui.hpp"
@@ -26,7 +25,7 @@ using namespace std;
 #include "opencv2/nonfree/nonfree.hpp"
 #include "opencv2/nonfree/features2d.hpp"
 
-// gpu
+// OCL
 #include "opencv2/ocl/ocl.hpp"
 #include "opencv2/nonfree/ocl.hpp"
 using namespace cv::ocl;
@@ -58,7 +57,7 @@ if (DEBUG) { cerr << "["<< __func__ << ":" << __LINE__ << "] " << x << endl; } \
 // OpenNI
 xn::Context xnContext;
 xn::DepthGenerator xnDepthGenerator;
-xn::ImageGenerator xnImgeGenerator;
+xn::ImageGenerator xnImageGenerator;
 vector< vector< Point2f > > foundMarkers;
 
 int initOpenNI(const XnChar* fname) {
@@ -73,12 +72,12 @@ int initOpenNI(const XnChar* fname) {
 	CHECK_RC(nRetVal, "FindExistingNode(XN_NODE_TYPE_DEPTH)");
     
 	// initialize image generator
-	nRetVal = xnContext.FindExistingNode(XN_NODE_TYPE_IMAGE, xnImgeGenerator);
+	nRetVal = xnContext.FindExistingNode(XN_NODE_TYPE_IMAGE, xnImageGenerator);
 	CHECK_RC(nRetVal, "FindExistingNode(XN_NODE_TYPE_IMAGE)");
     
     XnBool isSupported = xnDepthGenerator.IsCapabilitySupported("AlternativeViewPoint");
     if(TRUE == isSupported) {
-        XnStatus res = xnDepthGenerator.GetAlternativeViewPointCap().SetViewPoint(xnImgeGenerator);
+        XnStatus res = xnDepthGenerator.GetAlternativeViewPointCap().SetViewPoint(xnImageGenerator);
         if(XN_STATUS_OK != res) {
             printf("Getting and setting AlternativeViewPoint failed: %s\n", xnGetStatusString(res));
         }
@@ -124,17 +123,17 @@ int main(int argc, char** argv )
     //SurfFeatureDetector detector( minHessian , nOctaves, nOctavesLayers, true, true);
     //SurfDescriptorExtractor extractor;
     
-    // OCL SURF + GPU init
+    // OCL SURF + BFmatcher + GPU init
     SURF_OCL oclSURF = SURF_OCL(minHessian,nOctaves,nOctavesLayers,true,0.01f,true);
+    BruteForceMatcher_OCL<ocl::L2<float> > matcher;
     ocl::DevicesInfo devices;
     ocl::getOpenCLDevices(devices);
     ocl::setDevice(devices[1]); // 0 = on-die gpu, 1 = peripheral gpu
     
     std::cout
-    << "Device name: "
+    << "OCL device name: "
     << cv::ocl::Context::getContext()->getDeviceInfo().deviceName
     << std::endl;
-    
     
     // init templates. calculate key points and descriptors for templates/markers
     MarkerInfo markerInfo = PaperUtil::getMatFromDir(path);
@@ -239,6 +238,71 @@ int main(int argc, char** argv )
     double currentTime = 0, lastUpdateTime = 0, elapsedTime = 0;
     char key = 'a';
     
+    // camera helper values
+    int xOffset = 320, yOffset = 0, width = 640, height = 960;
+    Rect cropROI(xOffset, yOffset, width, height);
+    
+    // grab frame from both cams and calc homography
+    // logitech frame
+    Mat logitechFrame, greyLogitechFrame, finalLogitechFrame;
+    cap >> logitechFrame;
+    Mat cropLogitechFrame = logitechFrame(cropROI);
+    cvtColor(cropLogitechFrame, greyLogitechFrame, CV_RGB2GRAY);
+    greyLogitechFrame.copyTo(finalLogitechFrame, Mat()); // deep copy needed for proper ocl upload
+
+    // kinect frame
+    xnContext.WaitAndUpdateAll();
+    Mat3b kinectFrame(480,640);
+    Mat greyKinectFrame;
+    kinectFrame.data = (uchar*) xnImageGenerator.GetRGB24ImageMap();
+    cvtColor(kinectFrame, greyKinectFrame, CV_RGB2GRAY);
+
+    // upload images to ocl
+    oclMat oclLogitechFrame, oclKinectFrame;
+    oclLogitechFrame.upload(finalLogitechFrame);
+    oclKinectFrame.upload(greyKinectFrame);
+
+    // surf
+    oclMat oclLogitechKeyp, oclLogitechDesc, oclKinectKeyp, oclKinectDesc;
+    oclSURF(oclLogitechFrame, oclMat(), oclLogitechKeyp, oclLogitechDesc);
+    oclSURF(oclKinectFrame, oclMat(), oclKinectKeyp, oclKinectDesc);
+
+    // download results
+    vector<KeyPoint> dlLogitechKp, dlKinectKp;
+    vector<float> dlLogitechDesc, dlKinectDesc;
+    oclSURF.downloadKeypoints(oclLogitechKeyp, dlLogitechKp);
+    oclSURF.downloadKeypoints(oclKinectKeyp, dlKinectKp);
+    oclSURF.downloadDescriptors(oclLogitechDesc, dlLogitechDesc);
+    oclSURF.downloadDescriptors(oclKinectDesc, dlKinectDesc);
+
+    // bfmatch
+    vector<vector<DMatch > > homoMatches;
+    vector<DMatch > goodHomoMatches;
+    matcher.knnMatch(oclLogitechDesc, oclKinectDesc, homoMatches, 2);
+
+    // keep good matches only
+    float NNDR = 0.9;
+    for(int i = 0; i < (dlKinectDesc.size(),(int) homoMatches.size()); i++) {
+        if((homoMatches[i][0].distance < NNDR*(homoMatches[i][1].distance)) &&
+           ((int) homoMatches[i].size()<=2 && (int) homoMatches[i].size()>0)) {
+            goodHomoMatches.push_back(homoMatches[i][0]);
+        }
+    }
+
+    vector<Point2f> goodLogitechKeyp;
+    vector<Point2f> goodKinectKeyp;
+    // Get the keypoints from the good matches
+    for( int i = 0; i < goodHomoMatches.size(); i++ ) {
+        goodLogitechKeyp.push_back( dlLogitechKp[ goodHomoMatches[i].queryIdx ].pt );
+        goodKinectKeyp.push_back( dlKinectKp[ goodHomoMatches[i].trainIdx ].pt );
+    }
+
+    // Get homography between kinect and logitech cam
+    // ransacReprojThresh of 1.0 is strict, 10.0 is loose
+    //Mat homography = findHomography( goodKinectKeyp, goodLogitechKeyp, CV_RANSAC , 3.0 );
+    Mat homography = findHomography( goodKinectKeyp, goodLogitechKeyp, CV_RANSAC , 3.0 );
+    cout << "found kinect/logitech homography" << endl;
+    
     while (key != 27)
     {
         Rect rgbROI(xMin, yMin, xMax - xMin, yMax - yMin);
@@ -258,8 +322,6 @@ int main(int argc, char** argv )
         cap >> frame;
 		
         // crop
-        int x = 320, y = 0, width = 640, height = 960;
-        Rect cropROI(x, y, width, height);
         Mat cropImage = frame(cropROI);
         cvtColor(cropImage, greyImage, CV_RGB2GRAY);
         
@@ -389,19 +451,21 @@ int main(int argc, char** argv )
 				Scalar center = mean(contourMat);
 				Point2f touchPoint(center[0], center[1]);
 				touchPoints.push_back(touchPoint);
-                
                 for (int g = 0; g<foundMarkers.size(); g++) {
-                    double foundIt = pointPolygonTest(foundMarkers.at(g),touchPoint, false);
-                    //PAPER_DEBUG(foundIt);
-                    //cout << foundIt << endl;
+                    // transform perspective between kinect and logitech
+                    vector<Point2f> nTouch(1), transformedTouchpoint(1);
+                    nTouch.push_back(touchPoints[0]);
+                    perspectiveTransform(nTouch, transformedTouchpoint, homography);
+                    // test if transformed touch point is inside known marker location
+                    double foundIt = pointPolygonTest(foundMarkers.at(g),transformedTouchpoint[0], false);
+
                     if(foundIt > 0){
-                        //PAPER_DEBUG(markerInfo.fNames.at(g));
                         cout << markerInfo.fNames.at(g) << endl;
                     }
                 }
                 cerr << touchPoint.x << "," << touchPoint.y << endl;
 			}
-		}
+        }
         // comment out when going live
 		// draw debug frame
 		depth.convertTo(depth8, CV_8U, 255 / debugFrameMaxDepth); // render depth to debug frame
