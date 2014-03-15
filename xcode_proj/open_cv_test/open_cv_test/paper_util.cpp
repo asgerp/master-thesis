@@ -69,11 +69,6 @@ vector< vector<KeyPoint> > PaperUtil::getKeyPointsFromTemplates(vector<Mat> temp
     
     vector< vector<KeyPoint> > key_points;
     for(vector<int>::size_type i = 0; i != templates.size(); i++) {
-    //for(vector<Mat>::iterator it = templates.begin(); it != templates.end(); ++it) {
-        Mat eq_template;
-        
-        //equalizeHist( templates[i], eq_template );
-        
         vector<KeyPoint> kp_object;
         detector.detect( templates[i], kp_object );
         key_points.push_back(kp_object);
@@ -85,12 +80,10 @@ vector< vector<KeyPoint> > PaperUtil::getKeyPointsFromTemplates(vector<Mat> temp
 
 vector< Mat > PaperUtil::getDescriptorsFromKP(vector<Mat> templates, vector< vector<KeyPoint> > key_points){
     SurfDescriptorExtractor extractor;
-//    FREAK extractor(true, true, 8.0, 4, vector<int>());
 
     vector< Mat > descriptor_objects;
     for(vector<int>::size_type i = 0; i != templates.size(); i++) {
         Mat des_object, eq_template;
-        //equalizeHist( templates[i], eq_template );
         extractor.compute( templates[i], key_points[i], des_object );
         descriptor_objects.push_back(des_object);
         std::cout << des_object.size() << endl;
@@ -179,9 +172,6 @@ Mat PaperUtil::alignCams(Mat logitech, Mat Kinect){
         if( dist > max_dist ) max_dist = dist;
     }
     
-    //printf("-- Max dist : %f \n", max_dist );
-    //printf("-- Min dist : %f \n", min_dist );
-    
     //-- Draw only "good" matches (i.e. whose distance is less than 3*min_dist )
     std::vector< DMatch > good_matches;
     
@@ -207,7 +197,7 @@ Mat PaperUtil::alignCams(Mat logitech, Mat Kinect){
         scene.push_back( keypoints_scene[ good_matches[i].trainIdx ].pt );
     }
     
-    Mat H = findHomography( obj, scene, RANSAC );
+    Mat H = findHomography( obj, scene, CV_RANSAC );
     
     //-- Get the corners from the image_1 ( the object to be "detected" )
     std::vector<Point2f> obj_corners(4);
@@ -216,7 +206,6 @@ Mat PaperUtil::alignCams(Mat logitech, Mat Kinect){
     std::vector<Point2f> scene_corners(4);
     
     perspectiveTransform( obj_corners, scene_corners, H);
-    
     
     //-- Draw lines between the corners (the mapped object in the scene - image_2 )
     Point2f offset( (float)logitech.cols, 0);
@@ -227,8 +216,6 @@ Mat PaperUtil::alignCams(Mat logitech, Mat Kinect){
     
     //-- Show detected matches
     imshow( "Good Matches & Object detection", img_matches );
-    
-    waitKey(0);
     
     return H;
 

@@ -116,12 +116,9 @@ int main(int argc, char** argv )
     }
     
     // init detectors, extractors, and matchers
-    //FlannBasedMatcher matcher;
     int minHessian = 300;
     int nOctaves = 4;
     int nOctavesLayers = 4;
-    //SurfFeatureDetector detector( minHessian , nOctaves, nOctavesLayers, true, true);
-    //SurfDescriptorExtractor extractor;
     
     // OCL SURF + BFmatcher + GPU init
     SURF_OCL oclSURF = SURF_OCL(minHessian,nOctaves,nOctavesLayers,true,0.01f,true);
@@ -196,12 +193,10 @@ int main(int argc, char** argv )
 	int yMax = 320;
     Mat1s depth(480, 640); // 16 bit depth (in millimeters)
 	Mat1b depth8(480, 640); // 8 bit depth
-	Mat3b rgb(480, 640); // 8 bit depth
     
 	Mat3b debug(480, 640); // debug visualization
     
 	Mat1s foreground(640, 480);
-    //	Mat1b foreground8(640, 480);
     
 	Mat1b touch(640, 480); // touch mask
     
@@ -256,51 +251,9 @@ int main(int argc, char** argv )
     Mat greyKinectFrame;
     kinectFrame.data = (uchar*) xnImageGenerator.GetRGB24ImageMap();
     cvtColor(kinectFrame, greyKinectFrame, CV_RGB2GRAY);
-
-    // upload images to ocl
-    oclMat oclLogitechFrame, oclKinectFrame;
-    oclLogitechFrame.upload(finalLogitechFrame);
-    oclKinectFrame.upload(greyKinectFrame);
-
-    // surf
-    oclMat oclLogitechKeyp, oclLogitechDesc, oclKinectKeyp, oclKinectDesc;
-    oclSURF(oclLogitechFrame, oclMat(), oclLogitechKeyp, oclLogitechDesc);
-    oclSURF(oclKinectFrame, oclMat(), oclKinectKeyp, oclKinectDesc);
-
-    // download results
-    vector<KeyPoint> dlLogitechKp, dlKinectKp;
-    vector<float> dlLogitechDesc, dlKinectDesc;
-    oclSURF.downloadKeypoints(oclLogitechKeyp, dlLogitechKp);
-    oclSURF.downloadKeypoints(oclKinectKeyp, dlKinectKp);
-    oclSURF.downloadDescriptors(oclLogitechDesc, dlLogitechDesc);
-    oclSURF.downloadDescriptors(oclKinectDesc, dlKinectDesc);
-
-    // bfmatch
-    vector<vector<DMatch > > homoMatches;
-    vector<DMatch > goodHomoMatches;
-    matcher.knnMatch(oclLogitechDesc, oclKinectDesc, homoMatches, 2);
-
-    // keep good matches only
-    float NNDR = 0.9;
-    for(int i = 0; i < (dlKinectDesc.size(),(int) homoMatches.size()); i++) {
-        if((homoMatches[i][0].distance < NNDR*(homoMatches[i][1].distance)) &&
-           ((int) homoMatches[i].size()<=2 && (int) homoMatches[i].size()>0)) {
-            goodHomoMatches.push_back(homoMatches[i][0]);
-        }
-    }
-
-    vector<Point2f> goodLogitechKeyp;
-    vector<Point2f> goodKinectKeyp;
-    // Get the keypoints from the good matches
-    for( int i = 0; i < goodHomoMatches.size(); i++ ) {
-        goodLogitechKeyp.push_back( dlLogitechKp[ goodHomoMatches[i].queryIdx ].pt );
-        goodKinectKeyp.push_back( dlKinectKp[ goodHomoMatches[i].trainIdx ].pt );
-    }
-
-    // Get homography between kinect and logitech cam
-    // ransacReprojThresh of 1.0 is strict, 10.0 is loose
-    //Mat homography = findHomography( goodKinectKeyp, goodLogitechKeyp, CV_RANSAC , 3.0 );
-    Mat homography = findHomography( goodKinectKeyp, goodLogitechKeyp, CV_RANSAC , 3.0 );
+    
+    Mat homography = PaperUtil::alignCams(finalLogitechFrame, greyKinectFrame);
+    
     cout << "found kinect/logitech homography" << endl;
     
     while (key != 27)
@@ -312,10 +265,6 @@ int main(int argc, char** argv )
         
         // update 16 bit depth matrix
         depth.data = (uchar*) xnDepthGenerator.GetDepthMap();
-		
-        //xnImgeGenerator.GetGrayscale8ImageMap()
-		// update rgb image
-		//rgb.data = (uchar*) xnImgeGenerator.GetRGB24ImageMap(); // segmentation fault here
         
         // init frames used this iteration
         Mat frame, eq_frame, image, greyImage, rgb2;
@@ -329,12 +278,8 @@ int main(int argc, char** argv )
         greyImage.copyTo(image, Mat());
     
         // descriptor and keypoint from image
-        Mat des_image;
         vector<KeyPoint> kp_image;
         vector<KeyPoint> imageKp;
-        
-        //detector.detect( image, kp_image );
-        //extractor.compute( image, kp_image, des_image );
         
         // ocl code ( move out of while to preallocate )
         oclMat oclImage = oclMat(width,height,CV_8U); // move this to preallocate ?
@@ -374,15 +319,10 @@ int main(int argc, char** argv )
             vector<Point2f> scene_corners(4);
             Mat H;
             
-            //matcher.knnMatch(dlTemplDescriptors[i],des_image,matches, 2);
-            //matcher.knnMatch(des_image, template_descriptors[i], matches,2);
-            
-            
             // ocl matching
             BruteForceMatcher_OCL< ocl::L2<float> > oclBFMatcher; // can't move this out of dispatch for some reason (?)
             oclBFMatcher.knnMatch(oclTemplateDescriptors[i], oclImageDescriptors, matches, 2); // k < 2 bugged
             
-            //for(int h = 0; h < min(des_image.rows-1,(int) matches.size()); h++) {
             for(int h = 0; h < (dlImageDesc.size(),(int) matches.size()); h++) {
                 if((matches[h][0].distance < 0.85*(matches[h][1].distance)) && ((int) matches[h].size()<=2 && (int) matches[h].size()>0)) {
                     good_matches.push_back(matches[h][0]);
@@ -390,13 +330,7 @@ int main(int argc, char** argv )
             }
 
             if (good_matches.size() >= 4) {
-                /*
-                for( int j = 0; j < good_matches.size(); j++ ) {
-                    //Get the keypoints from the good matches
-                    obj.push_back( template_kp[i][ good_matches[j].queryIdx ].pt );
-                    scene.push_back( kp_image[ good_matches[j].trainIdx ].pt );
-                }
-                */
+
                 for( int j = 0; j < good_matches.size(); j++ ) {
                     //Get the keypoints from the good matches
                     obj.push_back( dlTemplKeypoints[i][ good_matches[j].queryIdx ].pt );
@@ -424,12 +358,6 @@ int main(int argc, char** argv )
             }
         });// dispatch block end
         
-        /*
-        for (int h = 0 ; h< markerInfo.fNames.size(); h++) {
-            cerr << foundMarkers.at(h) << ": " << markerInfo.fNames.at(h) << endl;
-        }
-        */
-        
         // extract foreground by simple subtraction of very basic background model
 		foreground = background - depth;
 		// find touch mask by thresholding (points that are close to background = touch points)
@@ -442,37 +370,43 @@ int main(int argc, char** argv )
         // find touch points and return them
 		vector< vector<Point2i> > contours;
 		vector<Point2f> touchPoints;
-		findContours(touchRoi, contours, CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE, Point2i(xMin, yMin));
-		
-        for (unsigned int i=0; i<contours.size(); i++) {
+        findContours(touchRoi, contours, CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE, Point(xMin, yMin));
+    
+        for (int i=0; i<contours.size(); i++) {
             Mat contourMat(contours[i]);
 			// find touch points by area thresholding
 			if ( contourArea(contourMat) > touchMinArea ) {
 				Scalar center = mean(contourMat);
 				Point2f touchPoint(center[0], center[1]);
 				touchPoints.push_back(touchPoint);
+                vector<Point2f> floatContours(1);
+                floatContours[0] = touchPoint;
                 for (int g = 0; g<foundMarkers.size(); g++) {
                     // transform perspective between kinect and logitech
-                    vector<Point2f> nTouch(1), transformedTouchpoint(1);
-                    nTouch.push_back(touchPoints[0]);
-                    perspectiveTransform(nTouch, transformedTouchpoint, homography);
+                    vector<Point2f> transformedTouchpoint(floatContours.size());
+                    perspectiveTransform(floatContours, transformedTouchpoint, homography.inv());
                     // test if transformed touch point is inside known marker location
+                    
+                    circle(image, transformedTouchpoint[0], 5, debugColor2, CV_FILLED);
+                    
                     double foundIt = pointPolygonTest(foundMarkers.at(g),transformedTouchpoint[0], false);
-
+                    
                     if(foundIt > 0){
-                        cout << markerInfo.fNames.at(g) << endl;
+                        cout << markerInfo.fNames.at(g) << " " << g << endl;
                     }
                 }
                 cerr << touchPoint.x << "," << touchPoint.y << endl;
 			}
         }
+        
         // comment out when going live
 		// draw debug frame
 		depth.convertTo(depth8, CV_8U, 255 / debugFrameMaxDepth); // render depth to debug frame
 		cvtColor(depth8, debug, CV_GRAY2BGR);
 		debug.setTo(debugColor0, touch);  // touch mask
 		rectangle(debug, roi, debugColor1, 2); // surface boundaries
-		for (unsigned int i=0; i<touchPoints.size(); i++) { // touch points
+        
+        for (unsigned int i=0; i<touchPoints.size(); i++) { // touch points
 			circle(debug, touchPoints[i], 5, debugColor2, CV_FILLED);
 		}
         imshow("depth", debug);
@@ -494,5 +428,3 @@ int main(int argc, char** argv )
     }
     return 0;
 }
-
-
