@@ -12,6 +12,7 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include <numeric>
 using namespace std;
 //grand central dispatch
 #include <dispatch/dispatch.h>
@@ -59,6 +60,8 @@ xn::Context xnContext;
 xn::DepthGenerator xnDepthGenerator;
 xn::ImageGenerator xnImageGenerator;
 vector< vector< Point2f > > foundMarkers;
+vector< int > activeMarkers;
+bool touchLastIteration = false;
 
 int initOpenNI(const XnChar* fname) {
 	XnStatus nRetVal = XN_STATUS_OK;
@@ -152,7 +155,7 @@ int main(int argc, char** argv )
     for (int i = 0; i < oclTemplates.size(); i++) {
         oclSURF(oclTemplates[i],oclMat(),oclTemplateKeypoints[i],oclTemplateDescriptors[i]);
     }
-
+    
     // Download template keypoints
     vector< vector< KeyPoint > > dlTemplKeypoints;
     vector< Mat > dlTemplDescriptors;
@@ -161,7 +164,7 @@ int main(int argc, char** argv )
         oclSURF.downloadKeypoints(oclTemplateKeypoints[i], dlTemplKp);
         dlTemplKeypoints.push_back(dlTemplKp);
     }
-
+    
     // init foundmarkers with empty data
     for (int j = 0; j<templates.size(); j++) {
         vector<Point2f> init_corners(4);
@@ -171,6 +174,7 @@ int main(int argc, char** argv )
         init_corners[2] = cvPoint( 0, 0 );
         init_corners[3] = cvPoint( 0, 0 );
         foundMarkers.push_back(init_corners);
+        activeMarkers.push_back(0);
     }
     
   	const char* windowName = "Debug";
@@ -218,7 +222,7 @@ int main(int argc, char** argv )
 	createTrackbar("xMax", windowName, &xMax, 640);
 	createTrackbar("yMin", windowName, &yMin, 480);
 	createTrackbar("yMax", windowName, &yMax, 480);
-
+    
     // create background model (average depth)
     // save nBackgroundTrain frame in buffer and calculate average between them
     for (unsigned int i=0; i<nBackgroundTrain; i++) {
@@ -244,7 +248,7 @@ int main(int argc, char** argv )
     Mat cropLogitechFrame = logitechFrame(cropROI);
     cvtColor(cropLogitechFrame, greyLogitechFrame, CV_RGB2GRAY);
     greyLogitechFrame.copyTo(finalLogitechFrame, Mat()); // deep copy needed for proper ocl upload
-
+    
     // kinect frame
     xnContext.WaitAndUpdateAll();
     Mat3b kinectFrame(480,640);
@@ -256,114 +260,108 @@ int main(int argc, char** argv )
     
     cout << "found kinect/logitech homography" << endl;
     
+    int rateCount = 0;
+    
     while (key != 27)
     {
         Rect rgbROI(xMin, yMin, xMax - xMin, yMax - yMin);
-
+        
         // reads data from all nodes, eg. cameras(depth and rgb)
         xnContext.WaitAndUpdateAll();
         
         // update 16 bit depth matrix
         depth.data = (uchar*) xnDepthGenerator.GetDepthMap();
         
-        // init frames used this iteration
-        Mat frame, eq_frame, image, greyImage, rgb2;
-        cap >> frame;
-		
-        // crop
-        Mat cropImage = frame(cropROI);
-        cvtColor(cropImage, greyImage, CV_RGB2GRAY);
-        
-        // deep copy needed or OCL uploads ROI+rest of parent image mat
-        greyImage.copyTo(image, Mat());
-    
-        // descriptor and keypoint from image
-        vector<KeyPoint> kp_image;
-        vector<KeyPoint> imageKp;
-        
-        // ocl code ( move out of while to preallocate )
-        oclMat oclImage = oclMat(width,height,CV_8U); // move this to preallocate ?
-        oclMat oclImageKeypoints = oclMat();
-        oclMat oclImageDescriptors = oclMat();
-        
-        // ocl upload image to gpu mem and get image keypoints + descriptors
-        oclImage.upload(image);
-        oclSURF(oclImage,oclMat(),oclImageKeypoints,oclImageDescriptors);
-        
-        // download results from gpu
-        vector<KeyPoint> dlImageKp;
-        vector<float> dlImageDesc;
-        oclSURF.downloadKeypoints(oclImageKeypoints, dlImageKp);
-        oclSURF.downloadDescriptors(oclImageDescriptors, dlImageDesc);
-        
-        // get dispatch queue
-        dispatch_queue_t aQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
-
-        // OPTIMIZE THIS
-        // function needs to know/ have access to:
-        /**
-         * templates, template_descritors[i]. des_image, matches
-         * good_matches, template_kp, kp_image, obj, scene, scene_corners, image
-         * 0.057101
-         */
-        //for(vector<int>::size_type i = 0; i != templates.size(); i++) {
-        // the scope of the block is similar to inner for loops.
-        // So the block should be able to read all varialbles
-        
-        dispatch_apply(templates.size(), aQueue, ^(size_t i) {
+        if (rateCount == 9) {
             
-            vector<vector<DMatch > > matches;
-            vector<DMatch > good_matches;
-            vector<Point2f> obj;
-            vector<Point2f> scene;
-            vector<Point2f> scene_corners(4);
-            Mat H;
+            // init frames used this iteration
+            Mat frame, image, greyImage;
+            cap >> frame;
             
-            // ocl matching
-            BruteForceMatcher_OCL< ocl::L2<float> > oclBFMatcher; // can't move this out of dispatch for some reason (?)
-            oclBFMatcher.knnMatch(oclTemplateDescriptors[i], oclImageDescriptors, matches, 2); // k < 2 bugged
+            // crop
+            Mat cropImage = frame(cropROI);
+            cvtColor(cropImage, greyImage, CV_RGB2GRAY);
             
-            for(int h = 0; h < (dlImageDesc.size(),(int) matches.size()); h++) {
-                if((matches[h][0].distance < 0.85*(matches[h][1].distance)) && ((int) matches[h].size()<=2 && (int) matches[h].size()>0)) {
-                    good_matches.push_back(matches[h][0]);
-                }
-            }
-
-            if (good_matches.size() >= 4) {
-
-                for( int j = 0; j < good_matches.size(); j++ ) {
-                    //Get the keypoints from the good matches
-                    obj.push_back( dlTemplKeypoints[i][ good_matches[j].queryIdx ].pt );
-                    scene.push_back( dlImageKp[ good_matches[j].trainIdx ].pt );
-                }
-                H = findHomography( obj, scene, CV_RANSAC , 10.0 );
-                vector<Point2f> obj_corners(4);
+            // deep copy needed or OCL uploads ROI+rest of parent image mat
+            greyImage.copyTo(image, Mat());
+            
+            // descriptor and keypoint from image
+            vector<KeyPoint> kp_image, imageKp;
+            
+            // ocl code ( move out of while to preallocate )
+            oclMat oclImage = oclMat(width,height,CV_8U); // move this to preallocate ?
+            oclMat oclImageKeypoints = oclMat();
+            oclMat oclImageDescriptors = oclMat();
+            
+            // ocl upload image to gpu mem and get image keypoints + descriptors
+            oclImage.upload(image);
+            oclSURF(oclImage,oclMat(),oclImageKeypoints,oclImageDescriptors);
+            
+            // download results from gpu
+            vector<KeyPoint> dlImageKp;
+            vector<float> dlImageDesc;
+            oclSURF.downloadKeypoints(oclImageKeypoints, dlImageKp);
+            oclSURF.downloadDescriptors(oclImageDescriptors, dlImageDesc);
+            
+            // get dispatch queue
+            dispatch_queue_t aQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
+            
+            dispatch_apply(templates.size(), aQueue, ^(size_t i) {
                 
-                //Get the corners from the object
-                obj_corners[0] = cvPoint(0,0);
-                obj_corners[1] = cvPoint( templates[i].cols, 0 );
-                obj_corners[2] = cvPoint( templates[i].cols, templates[i].rows );
-                obj_corners[3] = cvPoint( 0, templates[i].rows );
-                perspectiveTransform( obj_corners, scene_corners, H);
+                vector<vector<DMatch > > matches;
+                vector<DMatch > good_matches;
+                vector<Point2f> obj;
+                vector<Point2f> scene;
+                vector<Point2f> scene_corners(4);
+                Mat H;
                 
-                // Draw lines between the corners (the mapped object in the scene image )
-                // save the corners in a list if we think they are templates
-                int area = fabs(contourArea(Mat(scene_corners)));
+                // ocl matching
+                BruteForceMatcher_OCL< ocl::L2<float> > oclBFMatcher;
+                oclBFMatcher.knnMatch(oclTemplateDescriptors[i], oclImageDescriptors, matches, 2); // k < 2 bugged
                 
-                if(PaperUtil::checkAnglesInVector(scene_corners) == true && isContourConvex(Mat(scene_corners)) && 50000 > area && area > 5000){
-                    PaperUtil::drawLine(image, scene_corners);
-                    foundMarkers.at(i) = scene_corners;
+                for(int h = 0; h < (dlImageDesc.size(),(int) matches.size()); h++) {
+                    if((matches[h][0].distance < 0.85*(matches[h][1].distance)) && ((int) matches[h].size()<=2 && (int) matches[h].size()>0)) {
+                        good_matches.push_back(matches[h][0]);
+                    }
                 }
-
-            }
-        });// dispatch block end
-        
+                
+                if (good_matches.size() >= 4) {
+                    
+                    for( int j = 0; j < good_matches.size(); j++ ) {
+                        //Get the keypoints from the good matches
+                        obj.push_back( dlTemplKeypoints[i][ good_matches[j].queryIdx ].pt );
+                        scene.push_back( dlImageKp[ good_matches[j].trainIdx ].pt );
+                    }
+                    H = findHomography( obj, scene, CV_RANSAC , 10.0 );
+                    vector<Point2f> obj_corners(4);
+                    
+                    //Get the corners from the object
+                    obj_corners[0] = cvPoint(0,0);
+                    obj_corners[1] = cvPoint( templates[i].cols, 0 );
+                    obj_corners[2] = cvPoint( templates[i].cols, templates[i].rows );
+                    obj_corners[3] = cvPoint( 0, templates[i].rows );
+                    perspectiveTransform( obj_corners, scene_corners, H);
+                    
+                    // Draw lines between the corners (the mapped object in the scene image )
+                    // save the corners in a list if we think they are templates
+                    int area = fabs(contourArea(Mat(scene_corners)));
+                    
+                    if(PaperUtil::checkAnglesInVector(scene_corners) == true && isContourConvex(Mat(scene_corners)) && 50000 > area && area > 5000){
+                        PaperUtil::drawLine(image, scene_corners);
+                        foundMarkers.at(i) = scene_corners;
+                        activeMarkers[i] = 1;
+                    }
+                    
+                }
+            });// dispatch block end
+            rateCount = 0;
+        }
         // extract foreground by simple subtraction of very basic background model
 		foreground = background - depth;
 		// find touch mask by thresholding (points that are close to background = touch points)
 		touch = (foreground > touchDepthMin) & (foreground < touchDepthMax);
-    
-
+        
+        
 		// extract ROI(region of interest)
 		Rect roi(xMin, yMin, xMax - xMin, yMax - yMin);
 		Mat touchRoi = touch(roi);
@@ -371,7 +369,7 @@ int main(int argc, char** argv )
 		vector< vector<Point2i> > contours;
 		vector<Point2f> touchPoints;
         findContours(touchRoi, contours, CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE, Point(xMin, yMin));
-    
+        
         for (int i=0; i<contours.size(); i++) {
             Mat contourMat(contours[i]);
 			// find touch points by area thresholding
@@ -381,25 +379,32 @@ int main(int argc, char** argv )
 				touchPoints.push_back(touchPoint);
                 vector<Point2f> floatContours(1);
                 floatContours[0] = touchPoint;
-                for (int g = 0; g<foundMarkers.size(); g++) {
-                    // transform perspective between kinect and logitech
-                    vector<Point2f> transformedTouchpoint(floatContours.size());
-                    perspectiveTransform(floatContours, transformedTouchpoint, homography.inv());
-                    // test if transformed touch point is inside known marker location
-                    
-                    circle(image, transformedTouchpoint[0], 5, debugColor2, CV_FILLED);
-                    
-                    double foundIt = pointPolygonTest(foundMarkers.at(g),transformedTouchpoint[0], false);
-                    
-                    if(foundIt > 0){
-                        cout << markerInfo.fNames.at(g) << " " << g << endl;
+                // if no touch last iteration we check for a new touch
+                if (!touchLastIteration) {
+                    for (int g = 0; g<foundMarkers.size(); g++) {
+                        // transform perspective between kinect and logitech
+                        vector<Point2f> transformedTouchpoint(floatContours.size());
+                        perspectiveTransform(floatContours, transformedTouchpoint, homography.inv());
+                        // test if transformed touch point is inside known marker location
+                        //circle(image, transformedTouchpoint[0], 5, debugColor2, CV_FILLED);
+                        double foundIt = pointPolygonTest(foundMarkers.at(g),transformedTouchpoint[0], false);
+                        
+                        if(foundIt > 0){
+                            cout << markerInfo.fNames.at(g) << " " << g << endl;
+                        }
                     }
                 }
-                cerr << touchPoint.x << "," << touchPoint.y << endl;
+                //cerr << touchPoint.x << "," << touchPoint.y << endl;
 			}
         }
         
-        // comment out when going live
+        // check if we touched anything
+        if (touchPoints.size() > 0) {
+            touchLastIteration = true;
+        } else {
+            touchLastIteration = false;
+        }
+        
 		// draw debug frame
 		depth.convertTo(depth8, CV_8U, 255 / debugFrameMaxDepth); // render depth to debug frame
 		cvtColor(depth8, debug, CV_GRAY2BGR);
@@ -410,21 +415,25 @@ int main(int argc, char** argv )
 			circle(debug, touchPoints[i], 5, debugColor2, CV_FILLED);
 		}
         imshow("depth", debug);
-        imshow(windowName, image );
+        //imshow(windowName, image );
         
         // output fps as last thing we do
         frames++;
         currentTime = getTickCount();
         elapsedTime = ( currentTime - lastUpdateTime ) * 1000.0 / getTickFrequency();
         
+        int sum;
+        
+        sum = accumulate(activeMarkers.begin(), activeMarkers.end(), 0);
+        
         if ( elapsedTime >= 1000.0 ) {
-            //PAPER_DEBUG("fps: " << ((frames * 1000.0) / elapsedTime) << std::endl);
-            cout << "fps: " << ((frames * 1000.0) / elapsedTime) << std::endl;
+            cout << "fps: " << ((frames * 1000.0) / elapsedTime) <<  " active markers: " << sum << endl;
             frames = 0;
             lastUpdateTime = currentTime;
         }
         
         key = waitKey(1);
+        rateCount++;
     }
     return 0;
 }
