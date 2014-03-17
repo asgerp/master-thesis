@@ -304,56 +304,59 @@ int main(int argc, char** argv )
             oclSURF.downloadDescriptors(oclImageDescriptors, dlImageDesc);
             
             // get dispatch queue
-            dispatch_queue_t aQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
+            dispatch_queue_t aQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
             
-            dispatch_apply(templates.size(), aQueue, ^(size_t i) {
-                
-                vector<vector<DMatch > > matches;
-                vector<DMatch > good_matches;
-                vector<Point2f> obj;
-                vector<Point2f> scene;
-                vector<Point2f> scene_corners(4);
-                Mat H;
-                
-                // ocl matching
-                BruteForceMatcher_OCL< ocl::L2<float> > oclBFMatcher;
-                oclBFMatcher.knnMatch(oclTemplateDescriptors[i], oclImageDescriptors, matches, 2); // k < 2 bugged
-                
-                for(int h = 0; h < (dlImageDesc.size(),(int) matches.size()); h++) {
-                    if((matches[h][0].distance < 0.85*(matches[h][1].distance)) && ((int) matches[h].size()<=2 && (int) matches[h].size()>0)) {
-                        good_matches.push_back(matches[h][0]);
-                    }
-                }
-                
-                if (good_matches.size() >= 4) {
+            //dispatch_apply(templates.size(), aQueue, ^(size_t i) {
+            for (int i=0; i< templates.size();i++) {
+                dispatch_async(aQueue, ^{
                     
-                    for( int j = 0; j < good_matches.size(); j++ ) {
-                        //Get the keypoints from the good matches
-                        obj.push_back( dlTemplKeypoints[i][ good_matches[j].queryIdx ].pt );
-                        scene.push_back( dlImageKp[ good_matches[j].trainIdx ].pt );
-                    }
-                    H = findHomography( obj, scene, CV_RANSAC , 10.0 );
-                    vector<Point2f> obj_corners(4);
+                    vector<vector<DMatch > > matches;
+                    vector<DMatch > good_matches;
+                    vector<Point2f> obj;
+                    vector<Point2f> scene;
+                    vector<Point2f> scene_corners(4);
+                    Mat H;
                     
-                    //Get the corners from the object
-                    obj_corners[0] = cvPoint(0,0);
-                    obj_corners[1] = cvPoint( templates[i].cols, 0 );
-                    obj_corners[2] = cvPoint( templates[i].cols, templates[i].rows );
-                    obj_corners[3] = cvPoint( 0, templates[i].rows );
-                    perspectiveTransform( obj_corners, scene_corners, H);
+                    // ocl matching
+                    BruteForceMatcher_OCL< ocl::L2<float> > oclBFMatcher;
+                    oclBFMatcher.knnMatch(oclTemplateDescriptors[i], oclImageDescriptors, matches, 2); // k < 2 bugged
                     
-                    // Draw lines between the corners (the mapped object in the scene image )
-                    // save the corners in a list if we think they are templates
-                    int area = fabs(contourArea(Mat(scene_corners)));
-                    
-                    if(PaperUtil::checkAnglesInVector(scene_corners) == true && isContourConvex(Mat(scene_corners)) && 50000 > area && area > 5000){
-                        PaperUtil::drawLine(image, scene_corners);
-                        foundMarkers.at(i) = scene_corners;
-                        activeMarkers[i] = 1;
+                    for(int h = 0; h < (dlImageDesc.size(),(int) matches.size()); h++) {
+                        if((matches[h][0].distance < 0.85*(matches[h][1].distance)) && ((int) matches[h].size()<=2 && (int) matches[h].size()>0)) {
+                            good_matches.push_back(matches[h][0]);
+                        }
                     }
                     
-                }
-            });// dispatch block end
+                    if (good_matches.size() >= 4) {
+                        
+                        for( int j = 0; j < good_matches.size(); j++ ) {
+                            //Get the keypoints from the good matches
+                            obj.push_back( dlTemplKeypoints[i][ good_matches[j].queryIdx ].pt );
+                            scene.push_back( dlImageKp[ good_matches[j].trainIdx ].pt );
+                        }
+                        H = findHomography( obj, scene, CV_RANSAC , 10.0 );
+                        vector<Point2f> obj_corners(4);
+                        
+                        //Get the corners from the object
+                        obj_corners[0] = cvPoint(0,0);
+                        obj_corners[1] = cvPoint( templates[i].cols, 0 );
+                        obj_corners[2] = cvPoint( templates[i].cols, templates[i].rows );
+                        obj_corners[3] = cvPoint( 0, templates[i].rows );
+                        perspectiveTransform( obj_corners, scene_corners, H);
+                        
+                        // Draw lines between the corners (the mapped object in the scene image )
+                        // save the corners in a list if we think they are templates
+                        int area = fabs(contourArea(Mat(scene_corners)));
+                        
+                        if(PaperUtil::checkAnglesInVector(scene_corners) == true && isContourConvex(Mat(scene_corners)) && 50000 > area && area > 5000){
+                            PaperUtil::drawLine(image, scene_corners);
+                            foundMarkers.at(i) = scene_corners;
+                            activeMarkers[i] = 1;
+                        }
+                        
+                    }
+                });// dispatch block end
+            }
             rateCount = 0;
         }
         // extract foreground by simple subtraction of very basic background model
