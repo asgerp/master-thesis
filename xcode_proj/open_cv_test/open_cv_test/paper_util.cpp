@@ -59,6 +59,12 @@ MarkerInfo PaperUtil::getMatFromDir(string dir)
     } catch (const filesystem_error& ex) {
         cout << ex.what() << '\n';
     }
+    
+    for(int i=0; i < files.size(); i++){
+        Mat temp = files[i];
+        flip(temp,temp,-1);
+        files[i] = temp;
+    }
     mi.imageData = files;
     mi.fNames = fNames;
     return mi;
@@ -93,8 +99,11 @@ vector< Mat > PaperUtil::getDescriptorsFromKP(vector<Mat> templates, vector< vec
 }
 
 /** @function readme */
-void PaperUtil::readme()
-{ cout << " Usage: ./open_cv_test folder_with_templates/ " << endl; }
+void PaperUtil::readme() {
+    cout << "" << endl;
+    cout << " Usage: ./open_cv_test path_to_templates/ " << endl;
+    cout << "" << endl;
+}
 
 void PaperUtil::drawLine(Mat img, vector<Point2f> corners) {
     line( img, corners[0] , corners[1] , Scalar( 0, 255, 0), 4 );
@@ -138,87 +147,96 @@ void PaperUtil::foundMarker(vector< Point2f > marker_corners, vector<vector< Poi
     found.at(i) = (marker_corners);
 }
 
-
-Mat PaperUtil::alignCams(Mat logitech, Mat Kinect){
-    //-- Step 1: Detect the keypoints using SURF Detector
-    int minHessian = 400;
-    
-    SurfFeatureDetector detector( minHessian );
-    
-    std::vector<KeyPoint> keypoints_object, keypoints_scene;
-    
-    detector.detect( logitech, keypoints_object );
-    detector.detect( Kinect, keypoints_scene );
-    
-    //-- Step 2: Calculate descriptors (feature vectors)
-    SurfDescriptorExtractor extractor;
-    
-    Mat descriptors_object, descriptors_scene;
-    
-    extractor.compute( logitech, keypoints_object, descriptors_object );
-    extractor.compute( Kinect, keypoints_scene, descriptors_scene );
-    
-    //-- Step 3: Matching descriptor vectors using FLANN matcher
-    FlannBasedMatcher matcher;
-    std::vector< DMatch > matches;
-    matcher.match( descriptors_object, descriptors_scene, matches );
-    
-    double max_dist = 0; double min_dist = 100;
-    
-    //-- Quick calculation of max and min distances between keypoints
-    for( int i = 0; i < descriptors_object.rows; i++ )
-    { double dist = matches[i].distance;
-        if( dist < min_dist ) min_dist = dist;
-        if( dist > max_dist ) max_dist = dist;
+HomographyInfo PaperUtil::alignCams(Mat logitech, Mat Kinect){
+    double area = 0;
+    while (true) {
+        //-- Step 1: Detect the keypoints using SURF Detector
+        int minHessian = 400;
+        
+        SurfFeatureDetector detector( minHessian );
+        
+        vector<KeyPoint> keypoints_object, keypoints_scene;
+        
+        detector.detect( logitech, keypoints_object );
+        detector.detect( Kinect, keypoints_scene );
+        
+        //-- Step 2: Calculate descriptors (feature vectors)
+        SurfDescriptorExtractor extractor;
+        
+        Mat descriptors_object, descriptors_scene;
+        
+        extractor.compute( logitech, keypoints_object, descriptors_object );
+        extractor.compute( Kinect, keypoints_scene, descriptors_scene );
+        
+        //-- Step 3: Matching descriptor vectors using FLANN matcher
+        FlannBasedMatcher matcher;
+        vector< DMatch > matches;
+        matcher.match( descriptors_object, descriptors_scene, matches );
+        
+        double max_dist = 0; double min_dist = 100;
+        
+        //-- Quick calculation of max and min distances between keypoints
+        for( int i = 0; i < descriptors_object.rows; i++ )
+        { double dist = matches[i].distance;
+            if( dist < min_dist ) min_dist = dist;
+            if( dist > max_dist ) max_dist = dist;
+        }
+        
+        //-- Draw only "good" matches (i.e. whose distance is less than 3*min_dist )
+        vector< DMatch > good_matches;
+        
+        for( int i = 0; i < descriptors_object.rows; i++ )
+        { if( matches[i].distance < 3*min_dist )
+        { good_matches.push_back( matches[i]); }
+        }
+        
+        Mat img_matches;
+        drawMatches( logitech, keypoints_object, Kinect, keypoints_scene,
+                    good_matches, img_matches, Scalar::all(-1), Scalar::all(-1),
+                    vector<char>(), DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );
+        
+        
+        //-- Localize the object from img_1 in img_2
+        vector<Point2f> obj;
+        vector<Point2f> scene;
+        
+        for( size_t i = 0; i < good_matches.size(); i++ )
+        {
+            //-- Get the keypoints from the good matches
+            obj.push_back( keypoints_object[ good_matches[i].queryIdx ].pt );
+            scene.push_back( keypoints_scene[ good_matches[i].trainIdx ].pt );
+        }
+        
+        Mat H = findHomography( obj, scene, CV_RANSAC );
+        
+        //-- Get the corners from the image_1 ( the object to be "detected" )
+        vector<Point2f> obj_corners(4);
+        obj_corners[0] = Point(0,0); obj_corners[1] = Point( logitech.cols, 0 );
+        obj_corners[2] = Point( logitech.cols, logitech.rows ); obj_corners[3] = Point( 0, logitech.rows );
+        vector<Point2f> scene_corners(4);
+        
+        perspectiveTransform( obj_corners, scene_corners, H);
+        
+        area = fabs(contourArea(scene_corners));
+        // if angles OK and it's large enough, we return it (area should be roughly 75k)
+        if (checkAnglesInVector(scene_corners) && area > 50000) {
+            //-- Draw lines between the corners (the mapped object in the scene - image_2 )
+            Point2f offset( (float)logitech.cols, 0);
+            line( img_matches, scene_corners[0] + offset, scene_corners[1] + offset, Scalar(0, 255, 0), 4 );
+            line( img_matches, scene_corners[1] + offset, scene_corners[2] + offset, Scalar( 0, 255, 0), 4 );
+            line( img_matches, scene_corners[2] + offset, scene_corners[3] + offset, Scalar( 0, 255, 0), 4 );
+            line( img_matches, scene_corners[3] + offset, scene_corners[0] + offset, Scalar( 0, 255, 0), 4 );
+            
+            //-- Show detected matches
+            imshow( "Good Matches & Object detection", img_matches );
+            HomographyInfo result;
+            result.homography = H;
+            result.roi = scene_corners;
+            return result;
+        } else {
+            cout << "Couldn't get a good homography, trying again" << endl;
+        }
     }
-    
-    //-- Draw only "good" matches (i.e. whose distance is less than 3*min_dist )
-    std::vector< DMatch > good_matches;
-    
-    for( int i = 0; i < descriptors_object.rows; i++ )
-    { if( matches[i].distance < 3*min_dist )
-    { good_matches.push_back( matches[i]); }
-    }
-    
-    Mat img_matches;
-    drawMatches( logitech, keypoints_object, Kinect, keypoints_scene,
-                good_matches, img_matches, Scalar::all(-1), Scalar::all(-1),
-                vector<char>(), DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );
-    
-    
-    //-- Localize the object from img_1 in img_2
-    std::vector<Point2f> obj;
-    std::vector<Point2f> scene;
-    
-    for( size_t i = 0; i < good_matches.size(); i++ )
-    {
-        //-- Get the keypoints from the good matches
-        obj.push_back( keypoints_object[ good_matches[i].queryIdx ].pt );
-        scene.push_back( keypoints_scene[ good_matches[i].trainIdx ].pt );
-    }
-    
-    Mat H = findHomography( obj, scene, CV_RANSAC );
-    
-    //-- Get the corners from the image_1 ( the object to be "detected" )
-    std::vector<Point2f> obj_corners(4);
-    obj_corners[0] = Point(0,0); obj_corners[1] = Point( logitech.cols, 0 );
-    obj_corners[2] = Point( logitech.cols, logitech.rows ); obj_corners[3] = Point( 0, logitech.rows );
-    std::vector<Point2f> scene_corners(4);
-    
-    perspectiveTransform( obj_corners, scene_corners, H);
-    
-    //-- Draw lines between the corners (the mapped object in the scene - image_2 )
-    Point2f offset( (float)logitech.cols, 0);
-    line( img_matches, scene_corners[0] + offset, scene_corners[1] + offset, Scalar(0, 255, 0), 4 );
-    line( img_matches, scene_corners[1] + offset, scene_corners[2] + offset, Scalar( 0, 255, 0), 4 );
-    line( img_matches, scene_corners[2] + offset, scene_corners[3] + offset, Scalar( 0, 255, 0), 4 );
-    line( img_matches, scene_corners[3] + offset, scene_corners[0] + offset, Scalar( 0, 255, 0), 4 );
-    
-    //-- Show detected matches
-    imshow( "Good Matches & Object detection", img_matches );
-    
-    return H;
-
 }
 
 // Goes through all found markers

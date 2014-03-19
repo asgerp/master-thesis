@@ -19,6 +19,11 @@ struct MarkerInfo {
     vector<string> fNames;
 };
 
+struct HomographyInfo {
+    Mat homography;
+    vector<Point2f> roi;
+};
+
 class PaperUtil {
 public:
     static MarkerInfo getMatFromDir(string dir);
@@ -30,10 +35,9 @@ public:
     static bool checkAnglesInVector(vector<Point2f> v);
     static void foundMarker(vector<Point2f> marker_corners, vector< vector<Point2f> > found, size_t i);
     static bool touchedMarker(vector< vector<Point2f> > found, Point2f pt);
-    static Mat alignCams(Mat logitech, Mat Kinect);
+    static HomographyInfo alignCams(Mat logitech, Mat Kinect);
 private:
-    static double angle(Point2f pt1, Point2f pt2, Point2f pt0 );
-    
+    static double angle(Point2f pt1, Point2f pt2, Point2f pt0 );    
 };
 
 
