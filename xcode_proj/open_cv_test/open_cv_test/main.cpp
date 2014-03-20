@@ -172,8 +172,7 @@ int main(int argc, char** argv )
         activeMarkers.push_back(0);
         markerMissing.push_back(0);
     }
-    
-  	const char* windowName = "Debug";
+
     //================= INIT KINECT VARIABLES =============================//
     //init touch distance constants
 	const unsigned int nBackgroundTrain = 30;
@@ -204,8 +203,6 @@ int main(int argc, char** argv )
     cap.set(CV_CAP_PROP_CONVERT_RGB , false);
     //init openNi from config
 	initOpenNI("niConfig.xml");
-    
-    namedWindow(windowName);
     
     // create background model (average depth)
     // save nBackgroundTrain frame in buffer and calculate average between them
@@ -420,7 +417,7 @@ int main(int argc, char** argv )
 			circle(debug, touchPoints[i], 5, debugColor2, CV_FILLED);
 		}
         imshow("depth", debug);
-        //imshow(windowName, image);
+        //imshow("debug", image);
         
         // calc how many active markers
         int sum = accumulate(activeMarkers.begin(), activeMarkers.end(), 0);
