@@ -14,6 +14,8 @@
 #include <map>
 #include <numeric>
 #include <unistd.h>
+#include <fstream>
+#include <iostream>
 using namespace std;
 //grand central dispatch
 #include <dispatch/dispatch.h>
@@ -48,22 +50,18 @@ return rc;													\
 
 using namespace cv;
 
-#ifdef DEBUG
-#define PAPER_DEBUG(x) do { \
-if (DEBUG) { cerr << "["<< __func__ << ":" << __LINE__ << "] " << x << endl; } \
-} while (0)
-#else
-#define PAPER_DEBUG(x)
-#endif
+// General init
+clock_t start = clock();
+clock_t currTime;
+vector< vector< Point2f > > foundMarkers;
+vector< int > activeMarkers;
+vector< int > markerMissing;
+bool touchLastIteration = false;
 
 // OpenNI
 xn::Context xnContext;
 xn::DepthGenerator xnDepthGenerator;
 xn::ImageGenerator xnImageGenerator;
-vector< vector< Point2f > > foundMarkers;
-vector< int > activeMarkers;
-vector< int > markerMissing;
-bool touchLastIteration = false;
 
 int initOpenNI(const XnChar* fname) {
 	XnStatus nRetVal = XN_STATUS_OK;
@@ -105,15 +103,25 @@ void average(vector<Mat1s>& frames, Mat1s& mean) {
 }
 
 
-int main(int argc, char** argv )
-{
+int main(int argc, char** argv ) {
     string path;
+    
     if(argc != 2){
         PaperUtil::readme();
         return 0;
     } else{
         path = argv[1];
     }
+    
+    // generate logfile name
+    char sbuffer[24];
+    time_t date;
+    struct tm * timeinfo;
+    time(&date);
+    timeinfo = localtime (&date);
+    strftime(sbuffer,24,"%F-%H-%M-%S.txt",timeinfo);
+    string logfile(sbuffer);
+    ofstream out(logfile);
     
     // init detectors, extractors, and matchers
     int minHessian = 300;
@@ -186,7 +194,6 @@ int main(int argc, char** argv )
 	const Scalar debugColor1(255,0,0);
 	const Scalar debugColor2(255,255,255);
     
-    
     // touch-related mats
     Mat1s depth(480, 640); // 16 bit depth (in millimeters)
 	Mat1b depth8(480, 640); // 8 bit depth
@@ -201,6 +208,10 @@ int main(int argc, char** argv )
     cap.set(CV_CAP_PROP_FRAME_WIDTH, 1280);
     cap.set(CV_CAP_PROP_FRAME_HEIGHT, 960);
     cap.set(CV_CAP_PROP_CONVERT_RGB , false);
+    
+    // wait between initialising cameras
+    usleep(100000);
+    
     //init openNi from config
 	initOpenNI("niConfig.xml");
     
@@ -247,7 +258,7 @@ int main(int argc, char** argv )
 
     __block bool doSURF = true;
     int maxMissingIterations = 2;
-    
+
     while (key != 27)
     {
         // reads data from all nodes, eg. cameras(depth and rgb)
@@ -392,7 +403,13 @@ int main(int argc, char** argv )
                         double foundIt = pointPolygonTest(foundMarkers.at(g),transformedTouchpoint[0], false);
                         
                         if(foundIt > 0){
+                            currTime = clock();
+                            float diff = (float)currTime/CLOCKS_PER_SEC-(float)start/CLOCKS_PER_SEC;
+                            out << markerInfo.fNames.at(g) << ", " << diff << endl;
+                            out.flush();
                             cout << markerInfo.fNames.at(g) << " " << g << endl;
+                            
+                            
                         }
                     }
                 }
