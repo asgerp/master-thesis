@@ -16,7 +16,7 @@ profile
 *.moved-aside
 DerivedData
 .idea/
-*.project.pbxproj
+*.pbxproj
 
 # latex
 Report/*.aux
