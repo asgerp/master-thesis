@@ -1,0 +1,2 @@
+// ['Kopi', 'Kalender', 'Wifi', 'Batteri', 'Indstillinger', 'Papirkurv', 'Klip', 'Indkøbsvogn', 'Hjem', 'Email', 'Printer', 'Gem']
+var icons = ['Indkøbsvogn', 'Wifi', 'Klip', 'Papirkurv', 'Printer', 'Email', 'Printer', 'Papirkurv', 'Hjem', 'Kopi', 'Indkøbsvogn', 'Gem', 'Kopi', 'Kopi', 'Indstillinger', 'Batteri', 'Papirkurv', 'Klip', 'Hjem', 'Email', 'Batteri', 'Kalender', 'Gem', 'Gem', 'Batteri', 'Wifi', 'Indkøbsvogn', 'Indstillinger', 'Email', 'Printer', 'Kalender', 'Indstillinger', 'Kalender', 'Wifi', 'Hjem', 'Klip']

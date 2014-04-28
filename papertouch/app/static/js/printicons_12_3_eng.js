@@ -1,0 +1,1 @@
+var icons = ['Printer', 'Trashbin', 'Home', 'Battery', 'Battery', 'Save', 'Cut', 'Cut', 'Calendar', 'Save', 'Copy', 'Home', 'Shopping cart', 'Settings', 'Shopping cart', 'Copy', 'Wifi', 'Settings', 'Calendar', 'Wifi', 'Email', 'Trashbin', 'Printer', 'Email'];

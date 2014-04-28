@@ -1,0 +1,2 @@
+// ['Volume', 'Zoom', 'Contacts', 'Power', 'Eject', 'Search', 'Undo', 'Telephone', 'Clock', 'New file', 'Messages', 'Info']
+var icons = ['Power', 'Messages', 'Clock', 'Volume', 'Clock', 'Messages', 'Telephone', 'Search', 'Eject', 'New file', 'Eject', 'Telephone', 'Contacts', 'Contacts', 'Telephone', 'Info', 'Power', 'Volume', 'Clock', 'Eject', 'Messages', 'Search', 'Power', 'Undo', 'Contacts', 'Undo', 'Undo', 'Search', 'Info', 'Volume', 'Zoom', 'New file', 'Zoom', 'Info', 'New file', 'Zoom']

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+ {% block content %}
+<script src="/static/js/ddData.js"></script>	
+ <script>
+ 
+ window.onload = function(){
+ $('.ikon').ddslick({
+	data: ddData,
+	width: 150,
+	height: 360,
+	imagePosition: "left",
+	selectText: "Vælg et ikon",
+	onSelected: function (data) {
+		$("#"+data.original.context.id).siblings("input").val(data.selectedData.value);
+	}
+	});
+};
+ </script>
+	<form action="" method="post" name="print4">
+		{{ form.csrf_token }}
+		<div class="jumbotron">
+		<div class="container-fluid">
+			
+			<div class="row">
+					<div class="col-xs-6">
+						&nbsp;
+						<div id="my-icon-select1" class="ikon"></div>
+						{{ form.up_left(size=20) }}
+					</div>
+					<div class="col-xs-6">
+						&nbsp;
+						<div id="my-icon-select2" class="ikon"></div>
+						{{ form.up_right(size=20) }}
+					</div>
+			</div>
+			<div class="row">
+				<div class="col-xs-6">
+					&nbsp;
+					<div id="my-icon-select3" class="ikon"></div>
+					{{ form.down_left(size=20) }}
+				</div>
+				<div class="col-xs-6">
+					&nbsp;
+					<div id="my-icon-select4" class="ikon"></div>
+					{{ form.down_right(size=20) }}
+				</div>
+
+			</div>
+			&nbsp;
+			<p><input type="submit" class="btn btn-primary" value="Lav menu"></p>
+		</div>
+		</div>
+</form>
+
+{% endblock %}

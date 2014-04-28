@@ -1,0 +1,2 @@
+// ['Volume', 'Power', 'Info', 'Skub ud', 'Kontakter', 'Zoom', 'Ur', 'Søg', 'Fortryd', 'Beskeder', 'Ny fil', 'Telefon']
+var icons = ['Fortryd', 'Volume', 'Beskeder', 'Info', 'Power', 'Power', 'Søg', 'Skub ud', 'Telefon', 'Kontakter', 'Power', 'Ny fil', 'Søg', 'Ur', 'Volume', 'Skub ud', 'Fortryd', 'Info', 'Telefon', 'Ny fil', 'Beskeder', 'Kontakter', 'Ur', 'Zoom', 'Skub ud', 'Volume', 'Zoom', 'Kontakter', 'Telefon', 'Ur', 'Ny fil', 'Beskeder', 'Fortryd', 'Info', 'Søg', 'Zoom']

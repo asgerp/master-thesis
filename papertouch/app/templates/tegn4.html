@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block content %} 
+<script type="text/javascript" charset="utf-8">
+$(function() {
+    $('.savemarker').bind('click', function() {
+      $.getJSON('/get_img_icon', {
+		x1: $('input[name="x1"]').val(),
+		y1: $('input[name="y1"]').val(),
+		x2: $('input[name="x2"]').val(),
+		y2: $('input[name="y2"]').val(),
+		path: $('#tegnetMenu').attr('src'),
+		marker: $(this).data().marker,
+		config: "tegn4"
+      }, function(data) {
+		  $('.receiver.'+data.marker+' img').remove();
+		  $(".receiver."+data.marker).append('<div><img src="'+data.result+'" style="position: relative; width:100px; height:100px;" /><div>');
+      });
+      return false;
+    });
+  });
+function preview(img, selection) {
+    
+	$('input[name="x1"]').val(selection.x1);
+	$('input[name="y1"]').val(selection.y1);
+	$('input[name="x2"]').val(selection.x2);
+	$('input[name="y2"]').val(selection.y2);
+}
+
+
+$(document).ready(function () {
+    $('#tegnetMenu').imgAreaSelect({  onSelectChange: preview });
+});
+</script>
+<div class="container-fluid">
+	<div class="row">
+		<div class="col-md-7">
+
+			
+			<img id="tegnetMenu" src="{{image}}" alt="..." title="..." style="float: left; margin-right: 10px;">
+			
+		</div>
+		<div class="col-md-5">
+			<div class="container-fluid">
+				<div data-spy="affix" data-offset-top="60" data-offset-bottom="200">
+				<div class="panel panel-info">
+					<div class="panel-body">
+						<div class="row">
+							<div class="col-md-4">
+								<p><button class="btn btn-info savemarker" data-marker="up-left">Gem ikon</button></p>
+								<div class="receiver up-left">
+								</div>
+							</div>
+							<div class="col-md-4">
+								<p><button class="btn btn-info savemarker" data-marker="hjasjkad" style="visibility:hidden;">Gem ikon</button></p>
+								<div class="receiver ">
+								</div>
+							</div>
+							<div class="col-md-4">
+								<p><button class="btn btn-info savemarker" data-marker="up-right">Gem ikon</button></p>
+								<div class="receiver up-right">
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="panel panel-info">
+					<div class="panel-body">
+						<div class="row">
+							<div class="col-md-4">
+								<p><button class="btn btn-info savemarker" data-marker="down-right">Gem ikon</button></p>
+								<div class="receiver down-right">
+								</div>
+							</div>
+							<div class="col-md-4">
+								
+							</div>
+							<div class="col-md-4">
+								<p><button class="btn btn-info savemarker" data-marker="down-left">Gem ikon</button></p>
+								<div class="receiver down-left">
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<form action="tegn4" method="post" accept-charset="utf-8">
+					{{form.hidden_tag()}}
+					<p><input type="submit" class="btn btn-primary" value="Fortsæt"></p>
+				</form>
+			</div>
+			
+		</div>
+		</div>
+	</div>
+</div>
+{% endblock %}

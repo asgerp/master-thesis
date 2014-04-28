@@ -1,0 +1,26 @@
+<!-- extend base layout -->
+{% extends "base.html" %}
+
+{% block content %}
+<script type="text/javascript" charset="utf-8">
+$(function() {
+    $('#some_name').bind('click', function() {
+		$('#some_name').val("Vent venligst")
+      $.getJSON('/start_prog', {
+		  folder: "{{folder}}"
+      }, function() {
+		  $('#some_name').button('loading');
+		
+      });
+      return false;
+    });
+  });
+  </script>
+<div class="alert alert-success">
+	<strong><h1>Ikonerne er nu importeret!</h1></strong> du kan nu gå videre!
+		&nbsp;
+	<p><input type="button" name="some_name" class="btn btn-lg btn-success"  data-loading-text="Program Startet" value="Start program" id="some_name"></p>
+	<p><a href="trial_{{folder}}"><h2>Start opgaven</h2></a></p>
+	<p><a href="{{url_for('index')}}">Tilbage</a></p>
+</div>
+{% endblock %}

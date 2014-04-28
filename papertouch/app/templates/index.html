@@ -1,0 +1,33 @@
+
+{% extends "base.html" %}
+ {% block content %}
+ 
+<div class="jumbotron">
+	<div class="container-fluid">
+		<div class="row">
+			<div class="col-xs-6 col-md-4">
+				<a href="print4" class="btn btn-primary btn-lg" role="button">Print 4</a>
+			</div>
+			<div class="col-xs-6 col-md-4">
+				<a href="print8" class="btn btn-primary btn-lg" role="button">Print 8</a>
+			</div>
+			<div class="col-xs-6 col-md-4">
+				<a href="print12" class="btn btn-primary btn-lg" role="button">Print 12</a>
+			</div>
+		</div>
+		&nbsp;
+		<div class="row">
+			<div class="col-xs-6 col-md-4">
+				<a href="place_paper?num=4" class="btn btn-success btn-lg" role="button">Tegn 4</a>
+			</div>
+			<div class="col-xs-6 col-md-4">
+				<a href="place_paper?num=8" class="btn btn-success btn-lg" role="button">Tegn 8</a>
+			</div>
+			<div class="col-xs-6 col-md-4">
+				<a href="place_paper?num=12" class="btn btn-success btn-lg" role="button">Tegn 12</a>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}
+

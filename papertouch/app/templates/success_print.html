@@ -1,0 +1,25 @@
+<!-- extend base layout -->
+{% extends "base.html" %}
+
+{% block content %}
+<script type="text/javascript" charset="utf-8">
+$(function() {
+    $('#some_name').bind('click', function() {
+		$('#some_name').val("Vent venligst")
+      $.getJSON('/start_prog', {
+      }, function() {
+		$('#some_name').button('loading');
+      });
+      return false;
+    });
+  });
+  </script>
+<div class="alert alert-success">
+	<p><strong><h1>Menuen vil nu blive printet!</h1></strong> du kan nu gå videre!</p>
+		&nbsp;
+	<p><input type="button" name="some_name" class="btn btn-lg btn-success"  data-loading-text="Program startet" value="Start program" id="some_name"></p>
+	<p ><h2><a href="trial_print_{{num}}">Start opgaven</a></h2></p>
+	
+	<p><a href="{{url_for('index')}}">Tilbage</a></p>
+</div>
+{% endblock %}

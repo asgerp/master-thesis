@@ -1,0 +1,58 @@
+<!-- extend base layout -->
+{% extends "base.html" %}
+
+{% block content %}
+
+<script type="text/javascript" charset="utf-8">
+$(function() {
+    $('#import_btn').bind('click', function() {
+		$('#import_btn').val("Vent venligst")
+      $.getJSON('/get_img', {
+      }, function(data) {
+		$('.receiver img').remove();
+		$(".receiver").append('<div><img src="'+data.result+'" /><div>');
+		$('input[name="image"]').val(data.result);
+		$('#import_btn').val("Tag billede")
+		
+      });
+      return false;
+    });
+  });
+  $(document).ready(function () {
+	  $('input[name="number"]').val({{num}});
+  });
+</script>
+<div class="jumbotron">
+	
+
+<p>Placér nu papiret på clipboardet og tryk derefter "Tag billede". </br> Når du kan se alle ikoner, tryk da "Fortsæt"</p>
+<div class="container-fluid">
+	
+
+<div class="row">
+	<div class="col-md-8">
+			<div class="receiver">
+	
+			</div>
+			
+	</div>
+	<div class="col-md-4">
+		<div class="container-fluid">
+			<p><input id="import_btn" type="submit" class="btn btn-primary" value="Tag billede"></p>
+		<form action="place_paper_train" method="post" accept-charset="utf-8">
+			{{ form.hidden_tag() }}
+
+			<p><input type="submit" class="btn btn-success" value="Fortsæt"></p>
+		</form>
+				&nbsp;
+		
+		</div>
+	</div>
+</div>
+</div>
+
+
+		&nbsp;
+
+</div>
+{% endblock %}
